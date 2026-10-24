@@ -18,19 +18,40 @@
   const templates = ["Modern","Classic","Professional","Elegant","Minimal"];
   const skillExamples=["Communication","Problem Solving","Project Management","Microsoft Office"];
   const languageExamples=["English","Spanish"];
-  const state = {step:0, template:"Modern", photo:"", photoSize:128, titleDisabled:false, summaryHeading:"Profile", experience:[{job:"",company:"",startMonth:"",startYear:"",endMonth:"",endYear:"",description:""}],education:[{degree:"",school:"",start:"",end:"",description:"",descriptionNone:false,descriptionTouched:false}],skills:["","","",""],languages:["",""],values:{}};
+  const state = {step:0, template:"Modern", photo:"", photoSize:120, photoShape:"circle", titleDisabled:false, summaryHeading:"Profile", experience:[{job:"",company:"",startMonth:"",startYear:"",endMonth:"",endYear:"",description:""}],education:[{degree:"",school:"",start:"",end:"",description:"",descriptionNone:false,descriptionTouched:false}],skills:["","","",""],languages:["",""],values:{}};
   const photoUpload = document.querySelector(".photo-upload");
   const photoUploadHome = photoUpload.parentElement;
   const photoSizeSelect = document.createElement("select");
   photoSizeSelect.id = "photoSize";
   photoSizeSelect.className = "photo-size-select";
   photoSizeSelect.setAttribute("aria-label", "Profile photo size");
-  [[72,"Small"],[96,"Medium"],[128,"Large"]].forEach(([size,label])=>{
+  [[84,"Small"],[120,"Normal"],[156,"Large"]].forEach(([size,label])=>{
     const option=document.createElement("option");option.value=String(size);option.textContent=label;
     photoSizeSelect.append(option);
   });
   photoSizeSelect.value=String(state.photoSize);
-  photoUpload.querySelector(".photo-controls").insertBefore(photoSizeSelect,$("removePhoto"));
+  const photoSizeNote=document.createElement("span");
+  photoSizeNote.className="photo-size-note";
+  photoSizeNote.textContent="Normal (2 × 2 in) is recommended.";
+  const photoShapeControl=document.createElement("div");
+  photoShapeControl.className="photo-shape-control";
+  photoShapeControl.setAttribute("role","group");
+  photoShapeControl.setAttribute("aria-label","Profile photo shape");
+  [["circle","Circle"],["square","Square"]].forEach(([shape,label])=>{
+    const button=document.createElement("button");
+    button.type="button";
+    button.className="photo-shape-button";
+    button.dataset.photoShape=shape;
+    button.textContent=label;
+    button.setAttribute("aria-pressed",String(state.photoShape===shape));
+    photoShapeControl.append(button);
+  });
+  const photoControls=photoUpload.querySelector(".photo-controls");
+  const photoAdjustments=document.createElement("div");
+  photoAdjustments.className="photo-adjustments";
+  photoAdjustments.append(photoSizeSelect,photoShapeControl);
+  photoControls.insertBefore(photoSizeNote,$("removePhoto"));
+  photoControls.insertBefore(photoAdjustments,$("removePhoto"));
   sections.flatMap(s=>s.fields).forEach(f=>state.values[f.key]=f.value);
 
   function setTheme(theme) {
@@ -221,13 +242,17 @@
     if(state.template==="Elegant") html=`<div class="hero">${photo}<div>${header}</div></div><div class="body">${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}</div>`;
     if(state.template==="Professional") html=`<div class="hero">${photo}<div>${header}${contact}</div></div><div class="body">${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}</div>`;
     $("resumePreview").className=`resume ${state.template.toLowerCase()}`;
-    $("resumePreview").style.setProperty("--photo-size",`${state.photoSize}px`);
-    const photoTextSizes=state.photo?({72:[18,9,7.5],96:[21,10,8],128:[24,11,8.5]}[state.photoSize]):[20,9,8];
+    const previewWidth=$("resumePreview").clientWidth||500;
+    const renderedPhotoSize=Math.round(previewWidth*state.photoSize/500);
+    $("resumePreview").style.setProperty("--photo-size",`${renderedPhotoSize}px`);
+    $("resumePreview").style.setProperty("--photo-radius",state.photoShape==="circle"?"50%":"0");
+    const photoTextSizes=state.photo?({84:[18,9,7.5],120:[21,10,8],156:[24,11,8.5]}[state.photoSize]):[20,9,8];
     $("resumePreview").style.setProperty("--photo-header-size",`${photoTextSizes[0]}px`);
     $("resumePreview").style.setProperty("--photo-subtitle-size",`${photoTextSizes[1]}px`);
     $("resumePreview").style.setProperty("--photo-detail-size",`${photoTextSizes[2]}px`);
     $("resumePreview").innerHTML=`<div class="resume-inner">${html}</div>`;
     fitResumeToPage($("resumePreview").querySelector(".resume-inner"));
+    $("photoThumb").style.borderRadius=state.photoShape==="circle"?"50%":"0";
     $("photoThumb").src=state.photo || "data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" rx="40" fill="#edf1f7"/><circle cx="40" cy="29" r="14" fill="#b5c0d2"/><path d="M12 80Q14 48 40 48T68 80" fill="#b5c0d2"/></svg>');
   }
   function renderTemplates() {
@@ -336,6 +361,7 @@
     }
   });
   photoSizeSelect.addEventListener("change",()=>{state.photoSize=Number(photoSizeSelect.value);renderPreview();});
+  photoShapeControl.querySelectorAll("[data-photo-shape]").forEach(button=>button.addEventListener("click",()=>{state.photoShape=button.dataset.photoShape;photoShapeControl.querySelectorAll("[data-photo-shape]").forEach(option=>option.setAttribute("aria-pressed",String(option===button)));renderPreview();}));
   $("removePhoto").addEventListener("click",()=>{state.photo="";$("photo").value="";renderPreview();});
   $("downloadTop").addEventListener("click",downloadPDF);
   $("downloadPreview").addEventListener("click",downloadPDF);
