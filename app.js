@@ -296,11 +296,41 @@
     if(state.step<sections.length-1){state.step++;renderForm();}
     else { $("resumePreview").scrollIntoView({behavior:"smooth",block:"center"}); }
   });
-  $("photo").addEventListener("change",event=>{
+  async function makeCenteredSquarePhoto(file) {
+    const source=await new Promise((resolve,reject)=>{
+      const reader=new FileReader();
+      reader.onload=()=>resolve(reader.result);
+      reader.onerror=()=>reject(new Error("The photo could not be read."));
+      reader.readAsDataURL(file);
+    });
+    const image=await new Promise((resolve,reject)=>{
+      const photo=new Image();
+      photo.onload=()=>resolve(photo);
+      photo.onerror=()=>reject(new Error("This image format cannot be opened by your browser."));
+      photo.src=source;
+    });
+    const side=Math.min(image.naturalWidth,image.naturalHeight);
+    const x=(image.naturalWidth-side)/2;
+    const y=(image.naturalHeight-side)/2;
+    const canvas=document.createElement("canvas");
+    canvas.width=1024;
+    canvas.height=1024;
+    const context=canvas.getContext("2d");
+    if(!context) throw new Error("Photo cropping is unavailable in this browser.");
+    context.drawImage(image,x,y,side,side,0,0,1024,1024);
+    return canvas.toDataURL("image/jpeg",.92);
+  }
+  $("photo").addEventListener("change",async event=>{
     const file=event.target.files?.[0]; if(!file)return;
-    if(!file.type.startsWith("image/")){alert("Please select an image file.");event.target.value="";return;}
-    if(file.size>5*1024*1024){alert("Please choose an image smaller than 5 MB.");event.target.value="";return;}
-    const reader=new FileReader();reader.onload=()=>{state.photo=reader.result;renderPreview();};reader.readAsDataURL(file);
+
+    try {
+      state.photo=await makeCenteredSquarePhoto(file);
+      renderPreview();
+    } catch(error) {
+      console.error("Photo upload failed",error);
+      alert(error.message||"The photo could not be uploaded. Please try another image.");
+      event.target.value="";
+    }
   });
   photoSizeSelect.addEventListener("change",()=>{state.photoSize=Number(photoSizeSelect.value);renderPreview();});
   $("removePhoto").addEventListener("click",()=>{state.photo="";$("photo").value="";renderPreview();});
