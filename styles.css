@@ -104,3 +104,10 @@ body{transition:background-color .2s ease,color .2s ease}.topbar,.card,.paper-ch
 
 .templates{margin-bottom:14px}
 footer{margin-top:8px;border-top:1px solid var(--line);padding-top:14px}
+
+.resume.classic{padding:26px 32px}
+.resume.classic .classic-header{margin-bottom:15px}
+.resume.classic .classic-header h2{margin-bottom:6px}
+.resume.classic .main>h3:first-of-type{margin-top:10px}
+.resume.classic .item{margin-bottom:13px}
+.resume.classic .contact p{margin:6px 0}
