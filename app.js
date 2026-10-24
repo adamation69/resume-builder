@@ -25,7 +25,7 @@
   photoSizeSelect.id = "photoSize";
   photoSizeSelect.className = "photo-size-select";
   photoSizeSelect.setAttribute("aria-label", "Profile photo size");
-  [[72,"Small"],[96,"Medium"],[128,"Large · 2 × 2 in"]].forEach(([size,label])=>{
+  [[72,"Small"],[96,"Medium"],[128,"Large"]].forEach(([size,label])=>{
     const option=document.createElement("option");option.value=String(size);option.textContent=label;
     photoSizeSelect.append(option);
   });
@@ -64,7 +64,7 @@
   }
   function renderForm() {
     const section = sections[state.step];
-    photoUploadHome.append(photoUpload);
+    photoUploadHome.append(photoUpload); photoUpload.hidden=state.step!==0;
     $("stepCount").textContent = `Step ${state.step+1} of ${sections.length}`;
     $("fields").innerHTML = `<h3 class="form-section-title">${section.title}</h3><div class="field-grid">${section.fields.map(f=>f.key==="name"?`
       <div class="name-photo-row wide"><div class="field name-field">
@@ -72,7 +72,7 @@
         <input id="field-${f.key}" data-key="${f.key}" value="${escapeHTML(state.values[f.key])}" placeholder="${escapeHTML(f.placeholder||"")}">
       </div><div class="photo-slot"></div></div>`:`
       <div class="field ${f.wide?"wide":""}">
-        ${f.key==="job"?`<div class="title-label-row"><label for="field-${f.key}">${f.label}</label><button type="button" class="none-toggle ${state.titleDisabled?"active":""}" aria-pressed="${state.titleDisabled}">None</button></div>`:`<label for="field-${f.key}">${f.label}</label>`}
+        ${f.key==="job"?`<div class="title-label-row"><label for="field-${f.key}">${f.label}</label><button type="button" class="none-toggle ${state.titleDisabled?"active":""}" aria-pressed="${state.titleDisabled}">${state.titleDisabled?"Add professional title":"None"}</button></div>`:`<label for="field-${f.key}">${f.label}</label>`}
         ${f.key==="summary"?`<label class="summary-choice-label" for="summaryHeading">Summary heading in resume</label><select class="summary-heading-select" id="summaryHeading"><option value="Profile" ${state.summaryHeading==="Profile"?"selected":""}>Profile</option><option value="About Me" ${state.summaryHeading==="About Me"?"selected":""}>About Me</option></select>`:""}
         ${f.type==="textarea"
           ? `<textarea id="field-${f.key}" data-key="${f.key}" rows="${f.key==="summary"?4:5}" placeholder="${escapeHTML(f.placeholder||"")}">${escapeHTML(state.values[f.key])}</textarea>`
@@ -97,7 +97,7 @@
           <div class="field"><label>School name</label><input data-education="${index}" data-part="school" value="${escapeHTML(edu.school)}" placeholder="School name"></div>
           <div class="field"><label>Start year</label><input data-education="${index}" data-part="start" value="${escapeHTML(edu.start)}" placeholder="Year"></div>
           <div class="field"><label>End year</label><input data-education="${index}" data-part="end" value="${escapeHTML(edu.end)}" placeholder="Year"></div>
-          <div class="field wide"><div class="title-label-row"><label>Description</label><button type="button" class="none-toggle ${edu.descriptionNone?"active":""}" data-description-none="${index}" aria-pressed="${edu.descriptionNone}">None</button></div><textarea data-education="${index}" data-part="description" rows="3" placeholder="Relevant coursework, honors, or achievements." ${edu.descriptionNone?"disabled":""}>${escapeHTML(edu.description)}</textarea></div></div>
+          <div class="field wide"><div class="title-label-row"><label>Description</label><button type="button" class="none-toggle ${edu.descriptionNone?"active":""}" data-description-none="${index}" aria-pressed="${edu.descriptionNone}">${edu.descriptionNone?"Add Description":"None"}</button></div><textarea data-education="${index}" data-part="description" rows="3" placeholder="Relevant coursework, honors, or achievements." ${edu.descriptionNone?"disabled":""}>${escapeHTML(edu.description)}</textarea></div></div>
         </section>`).join("")}</div><button type="button" class="btn btn-light add-entry" id="addEducation">+ Add education</button>`;
     }
     if(state.step===3) {
@@ -116,7 +116,7 @@
     const noneToggle=$("fields").querySelector(".none-toggle:not([data-description-none])");
     if(noneToggle) noneToggle.addEventListener("click",()=>{
       state.titleDisabled=!state.titleDisabled;
-      if(state.titleDisabled){state.values.job="";renderPreview();}
+      if(state.titleDisabled) state.values.job="";renderPreview();
       renderForm();
     });
     $("fields").querySelectorAll("[data-experience]").forEach(el=>el.addEventListener("input",()=>{
@@ -159,7 +159,54 @@
     $("addSkill")?.addEventListener("click",()=>{state.skills.push("");renderForm();});
     $("addLanguage")?.addEventListener("click",()=>{state.languages.push("");renderForm();});
   }
-  function renderPreview() {
+  function fitResumeToPage(content) {
+    content.style.removeProperty("transform");
+    content.style.removeProperty("transform-origin");
+    content.style.removeProperty("width");
+    content.style.removeProperty("height");
+    content.style.removeProperty("min-height");
+    const frame=content.closest("#resumePreview");
+    if(!frame) return 1;
+    frame.dataset.fitScale="1";
+    const pageWidth=content.clientWidth;
+    const frameStyle=getComputedStyle(frame);
+    const pageHeight=frame.clientHeight-parseFloat(frameStyle.paddingTop)-parseFloat(frameStyle.paddingBottom);
+    const contentHeight=content.scrollHeight;
+    if(!pageWidth||!pageHeight||contentHeight<=pageHeight) return 1;
+    const scale=Math.min(1,(pageHeight-12)/contentHeight);
+    content.style.width=`${pageWidth/scale}px`;
+    content.style.height=`${pageHeight/scale}px`;
+    content.style.minHeight=`${pageHeight/scale}px`;
+    content.style.transformOrigin="top left";
+    content.style.transform=`scale(${scale})`;
+    frame.dataset.fitScale=String(scale);
+    return scale;
+  }
+  const pdfScaleProperties=["font-size","line-height","letter-spacing","width","height","min-width","max-width","min-height","max-height","margin-top","margin-right","margin-bottom","margin-left","padding-top","padding-right","padding-bottom","padding-left","border-top-width","border-right-width","border-bottom-width","border-left-width","border-top-left-radius","border-top-right-radius","border-bottom-right-radius","border-bottom-left-radius","gap","row-gap","column-gap","flex-basis","top","right","bottom","left"];
+  function scaleResumeForPDF(resume,pageScale,contentScale,pdfWidth,pdfHeight) {
+    const nodes=[resume,...resume.querySelectorAll("*")];
+    const originalStyles=nodes.map(node=>node.getAttribute("style"));
+    const scaledProperties=nodes.map((node,index)=>{
+      const computed=getComputedStyle(node);
+      const nodeScale=index===0?pageScale:contentScale;
+      return pdfScaleProperties.map(property=>{
+        const match=computed.getPropertyValue(property).trim().match(/^(-?\d*\.?\d+)px$/);
+        if(!match) return null;
+        const factor=index===0&&["font-size","line-height","letter-spacing"].includes(property)?contentScale:nodeScale;
+        return [property,`${Number(match[1])*factor}px`];
+      }).filter(Boolean);
+    });
+    nodes.forEach((node,index)=>{
+      scaledProperties[index].forEach(([property,value])=>node.style.setProperty(property,value));
+      node.style.removeProperty("transform");
+      node.style.removeProperty("transform-origin");
+    });
+    Object.assign(resume.style,{position:"fixed",left:"0",top:"0",width:`${pdfWidth}px`,height:`${pdfHeight}px`,minHeight:`${pdfHeight}px`,maxWidth:"none",aspectRatio:"auto",margin:"0",overflow:"hidden",zIndex:"2147483647",pointerEvents:"none"});
+    return ()=>nodes.forEach((node,index)=>{
+      if(originalStyles[index]===null) node.removeAttribute("style");
+      else node.setAttribute("style",originalStyles[index]);
+    });
+  }  function renderPreview() {
     const v=state.values;
     const photo=state.photo ? `<img class="avatar" src="${state.photo}" alt="Profile photo">` : "";
     const contactRow=(type,value)=>`<p class="contact-row">${contactIcon(type)}<span>${escapeHTML(value)}</span></p>`;
@@ -194,16 +241,17 @@
     let html="";
     if(state.template==="Modern") html=`<aside class="side">${photo}${section("Contact",contact)}${skills}${languages}</aside><div class="main">${header}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}</div>`;
     if(state.template==="Classic") html=`<div class="main">${photo}${header}${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}</div>`;
-    if(state.template==="Minimal") html=`<div class="main">${photo}${header}${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}</div>`;
+    if(state.template==="Minimal") html=`<div class="main"><div class="minimal-header"><div class="minimal-identity">${header}</div>${photo}</div>${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}</div>`;
     if(state.template==="Elegant") html=`<div class="hero">${photo}<div>${header}</div></div><div class="body">${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}</div>`;
     if(state.template==="Professional") html=`<div class="hero">${photo}<div>${header}${contact}</div></div><div class="body">${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}</div>`;
     $("resumePreview").className=`resume ${state.template.toLowerCase()}`;
     $("resumePreview").style.setProperty("--photo-size",`${state.photoSize}px`);
-    const photoTextSizes=state.photo?({72:[20,9,8],96:[19,8.5,7.5],128:[17,8,7]}[state.photoSize]):[20,9,8];
+    const photoTextSizes=state.photo?({72:[18,9,7.5],96:[21,10,8],128:[24,11,8.5]}[state.photoSize]):[20,9,8];
     $("resumePreview").style.setProperty("--photo-header-size",`${photoTextSizes[0]}px`);
     $("resumePreview").style.setProperty("--photo-subtitle-size",`${photoTextSizes[1]}px`);
     $("resumePreview").style.setProperty("--photo-detail-size",`${photoTextSizes[2]}px`);
-    $("resumePreview").innerHTML=html;
+    $("resumePreview").innerHTML=`<div class="resume-inner">${html}</div>`;
+    fitResumeToPage($("resumePreview").querySelector(".resume-inner"));
     $("photoThumb").src=state.photo || "data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" rx="40" fill="#edf1f7"/><circle cx="40" cy="29" r="14" fill="#b5c0d2"/><path d="M12 80Q14 48 40 48T68 80" fill="#b5c0d2"/></svg>');
   }
   function renderTemplates() {
@@ -222,23 +270,23 @@
       return;
     }
     const fileBase=(state.values.name.trim()||"resume").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"resume";
+    const pdfWidth=794;
+    const pdfHeight=1123;
     const options={
       margin:0,
       filename:`${fileBase}.pdf`,
       image:{type:"jpeg",quality:.98},
-      html2canvas:{scale:2,useCORS:true,backgroundColor:"#ffffff",scrollY:0},
+      html2canvas:{scale:2,useCORS:true,backgroundColor:"#ffffff",scrollX:0,scrollY:0,windowWidth:pdfWidth,windowHeight:pdfHeight},
       jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},
-      pagebreak:{mode:["css","legacy"],avoid:[".item"]}
+      pagebreak:{mode:[]}
     };
     const button=$("downloadTop");button.disabled=true;button.setAttribute("aria-busy","true");
-    const exportNode=$("resumePreview").cloneNode(true);
-    exportNode.classList.add("pdf-export");
-    Object.assign(exportNode.style,{position:"fixed",left:"-10000px",top:"0",width:"500px",minWidth:"0",maxWidth:"none",aspectRatio:"210 / 297",margin:"0"});
-    document.body.append(exportNode);
-    const finish=()=>{exportNode.remove();button.disabled=false;button.removeAttribute("aria-busy");};
-    window.html2pdf().set(options).from(exportNode).save().then(()=>{
-      finish();
-    }).catch(error=>{
+    const resume=$("resumePreview");
+    const fitScale=fitResumeToPage(resume.querySelector(".resume-inner"));
+    const pageScale=pdfWidth/resume.clientWidth;
+    const restoreStyles=scaleResumeForPDF(resume,pageScale,fitScale*pageScale,pdfWidth,pdfHeight);
+    const finish=()=>{restoreStyles();button.disabled=false;button.removeAttribute("aria-busy");};
+    window.html2pdf().set(options).from(resume).save().then(finish).catch(error=>{
       console.error("PDF download failed",error);
       finish();
       alert("The PDF could not be generated. Please try Print / PDF instead.");
@@ -261,7 +309,9 @@
   photoSizeSelect.addEventListener("change",()=>{state.photoSize=Number(photoSizeSelect.value);renderPreview();});
   $("removePhoto").addEventListener("click",()=>{state.photo="";$("photo").value="";renderPreview();});
   $("downloadTop").addEventListener("click",downloadPDF);
-  $("printButton").addEventListener("click",()=>window.print());
+  $("printButton").addEventListener("click",()=>{fitResumeToPage($("resumePreview").querySelector(".resume-inner"));window.print();});
+  window.addEventListener("beforeprint",()=>fitResumeToPage($("resumePreview").querySelector(".resume-inner")));
+  window.addEventListener("afterprint",renderPreview);
   $("themeToggle").addEventListener("click",()=>setTheme(document.body.dataset.theme === "dark" ? "light" : "dark"));
   setTheme(localStorage.getItem("resume-builder-theme") === "dark" ? "dark" : "light");
   renderForm();renderTemplates();renderPreview();
