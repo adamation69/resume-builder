@@ -182,31 +182,7 @@
     frame.dataset.fitScale=String(scale);
     return scale;
   }
-  const pdfScaleProperties=["font-size","line-height","letter-spacing","width","height","min-width","max-width","min-height","max-height","margin-top","margin-right","margin-bottom","margin-left","padding-top","padding-right","padding-bottom","padding-left","border-top-width","border-right-width","border-bottom-width","border-left-width","border-top-left-radius","border-top-right-radius","border-bottom-right-radius","border-bottom-left-radius","gap","row-gap","column-gap","flex-basis","top","right","bottom","left"];
-  function scaleResumeForPDF(resume,pageScale,contentScale,pdfWidth,pdfHeight) {
-    const nodes=[resume,...resume.querySelectorAll("*")];
-    const originalStyles=nodes.map(node=>node.getAttribute("style"));
-    const scaledProperties=nodes.map((node,index)=>{
-      const computed=getComputedStyle(node);
-      const nodeScale=index===0?pageScale:contentScale;
-      return pdfScaleProperties.map(property=>{
-        const match=computed.getPropertyValue(property).trim().match(/^(-?\d*\.?\d+)px$/);
-        if(!match) return null;
-        const factor=index===0&&["font-size","line-height","letter-spacing"].includes(property)?contentScale:nodeScale;
-        return [property,`${Number(match[1])*factor}px`];
-      }).filter(Boolean);
-    });
-    nodes.forEach((node,index)=>{
-      scaledProperties[index].forEach(([property,value])=>node.style.setProperty(property,value));
-      node.style.removeProperty("transform");
-      node.style.removeProperty("transform-origin");
-    });
-    Object.assign(resume.style,{position:"fixed",left:"0",top:"0",width:`${pdfWidth}px`,height:`${pdfHeight}px`,minHeight:`${pdfHeight}px`,maxWidth:"none",aspectRatio:"auto",margin:"0",overflow:"hidden",zIndex:"2147483647",pointerEvents:"none"});
-    return ()=>nodes.forEach((node,index)=>{
-      if(originalStyles[index]===null) node.removeAttribute("style");
-      else node.setAttribute("style",originalStyles[index]);
-    });
-  }  function renderPreview() {
+  function renderPreview() {
     const v=state.values;
     const photo=state.photo ? `<img class="avatar" src="${state.photo}" alt="Profile photo">` : "";
     const contactRow=(type,value)=>`<p class="contact-row">${contactIcon(type)}<span>${escapeHTML(value)}</span></p>`;
@@ -263,36 +239,56 @@
       state.template=button.dataset.template;renderTemplates();renderPreview();
     }));
   }
-  function downloadPDF() {
-    if(typeof window.html2pdf!=="function") {
-      alert("The PDF tool could not load. Please try again while connected to the internet, or use Print / PDF.");
-      window.print();
+  async function downloadPDF() {
+    if(typeof window.html2canvas!=="function"||typeof window.jspdf?.jsPDF!=="function") {
+      alert("The PDF tools could not load. Please refresh while connected to the internet and try again.");
       return;
     }
     const fileBase=(state.values.name.trim()||"resume").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"resume";
-    const pdfWidth=794;
-    const pdfHeight=1123;
-    const options={
-      margin:0,
-      filename:`${fileBase}.pdf`,
-      image:{type:"jpeg",quality:.98},
-      html2canvas:{scale:2,useCORS:true,backgroundColor:"#ffffff",scrollX:0,scrollY:0,windowWidth:pdfWidth,windowHeight:pdfHeight},
-      jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},
-      pagebreak:{mode:[]}
-    };
-    const button=$("downloadTop");button.disabled=true;button.setAttribute("aria-busy","true");
+    const button=$("downloadTop");
+    button.disabled=true;
+    button.setAttribute("aria-busy","true");
     const resume=$("resumePreview");
-    const fitScale=fitResumeToPage(resume.querySelector(".resume-inner"));
-    const pageScale=pdfWidth/resume.clientWidth;
-    const restoreStyles=scaleResumeForPDF(resume,pageScale,fitScale*pageScale,pdfWidth,pdfHeight);
-    const finish=()=>{restoreStyles();button.disabled=false;button.removeAttribute("aria-busy");};
-    window.html2pdf().set(options).from(resume).save().then(finish).catch(error=>{
+    const content=resume.querySelector(".resume-inner");
+    const originalFrameStyle=resume.getAttribute("style");
+    const originalContentStyle=content.getAttribute("style");
+    const originalFitScale=resume.dataset.fitScale;
+    Object.assign(resume.style,{position:"fixed",left:"0",top:"0",width:"500px",height:"707px",minHeight:"707px",maxWidth:"none",minWidth:"0",aspectRatio:"210 / 297",margin:"0",overflow:"hidden",zIndex:"2147483647",pointerEvents:"none"});
+    fitResumeToPage(content);
+    const restore=()=>{
+      if(originalFrameStyle===null) resume.removeAttribute("style"); else resume.setAttribute("style",originalFrameStyle);
+      if(originalContentStyle===null) content.removeAttribute("style"); else content.setAttribute("style",originalContentStyle);
+      if(originalFitScale===undefined) delete resume.dataset.fitScale; else resume.dataset.fitScale=originalFitScale;
+      button.disabled=false;
+      button.removeAttribute("aria-busy");
+    };
+    try {
+      await Promise.all([...resume.querySelectorAll("img")].map(image=>image.decode().catch(()=>{})));
+      const width=resume.offsetWidth;
+      const height=resume.offsetHeight;
+      const canvas=await window.html2canvas(resume,{
+        scale:4,
+        x:0,
+        y:0,
+        width,
+        height,
+        windowWidth:document.documentElement.clientWidth,
+        windowHeight:document.documentElement.clientHeight,
+        useCORS:true,
+        backgroundColor:"#ffffff",
+        scrollX:0,
+        scrollY:0
+      });
+      const pdf=new window.jspdf.jsPDF({unit:"mm",format:"a4",orientation:"portrait",compress:true});
+      pdf.addImage(canvas.toDataURL("image/jpeg",.98),"JPEG",0,0,210,297,undefined,"FAST");
+      pdf.save(`${fileBase}.pdf`);
+    } catch(error) {
       console.error("PDF download failed",error);
-      finish();
-      alert("The PDF could not be generated. Please try Print / PDF instead.");
-    });
-  }
-  document.querySelectorAll(".step").forEach(button=>button.addEventListener("click",()=>{
+      alert("The PDF could not be generated. Please try again.");
+    } finally {
+      restore();
+    }
+  }  document.querySelectorAll(".step").forEach(button=>button.addEventListener("click",()=>{
     state.step=Number(button.dataset.step);renderForm();
   }));
   $("back").addEventListener("click",()=>{state.step=Math.max(0,state.step-1);renderForm();});

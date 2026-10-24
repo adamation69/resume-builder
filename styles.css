@@ -22,7 +22,7 @@ body[data-theme="dark"] .photo-size-select{background:var(--white);color:var(--i
 #resumePreview .subtitle{font-size:var(--photo-subtitle-size,9px)}
 #resumePreview .contact,#resumePreview .professional-contact{font-size:var(--photo-detail-size,8px);min-width:0;overflow-wrap:anywhere}
 .summary-heading-select{display:block;width:100%;margin:0 0 8px;border:1px solid var(--line);border-radius:8px;padding:9px 11px;background:var(--white);color:var(--ink);font:inherit;font-size:13px}
-.education-list{display:grid;gap:11px}
+.education-list{display:grid;gap:11px}.experience-list{display:grid;gap:14px}
 .entry-card{border:1px solid var(--line);border-radius:10px;padding:12px}
 .entry-heading{display:flex;align-items:center;justify-content:space-between;font-size:12px;margin-bottom:3px}
 .entry-card .field-grid{gap:0 12px}
