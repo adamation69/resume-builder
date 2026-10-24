@@ -78,3 +78,10 @@ body{transition:background-color .2s ease,color .2s ease}.topbar,.card,.paper-ch
 @media print{#resumePreview h2{font-size:var(--photo-header-size,20px)!important}}
 #resumePreview{display:block}#resumePreview .resume-inner{width:100%;min-height:100%;transform-origin:top left}#resumePreview.modern .resume-inner{display:grid;grid-template-columns:32% 68%;min-height:100%}#resumePreview.classic .resume-inner,#resumePreview.minimal .resume-inner,#resumePreview.elegant .resume-inner,#resumePreview.professional .resume-inner{display:block}
 @media(max-width:700px){.workspace>.editor{grid-row:1}.workspace>.preview-column{grid-row:2}}
+
+/* Keep the app header visible during page scrolling on desktop and mobile. */
+.topbar{position:sticky;top:0;z-index:1000;background:var(--white);
+}
+
+.brand-logo{display:block;width:44px;height:44px;flex:0 0 44px;object-fit:contain;border-radius:12px}
+.brand-logo:focus-visible{outline:2px solid var(--blue);outline-offset:3px}

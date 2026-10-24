@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">Resume Builder</title>
+  <rect x="3" y="3" width="58" height="58" rx="15" fill="#f4f7ff" stroke="#dce5f7" stroke-width="2"/>
+  <path d="M19 12h19l11 11v28a4 4 0 0 1-4 4H19a4 4 0 0 1-4-4V16a4 4 0 0 1 4-4Z" fill="#fff" stroke="#1b2c49" stroke-width="3.5" stroke-linejoin="round"/>
+  <path d="M38 13v9a3 3 0 0 0 3 3h8" fill="#dce7ff" stroke="#365cf5" stroke-width="3" stroke-linejoin="round"/>
+  <circle cx="27" cy="28" r="5" fill="#365cf5"/>
+  <path d="M19 42c.7-5.2 3.5-8 8-8s7.3 2.8 8 8" fill="#365cf5"/>
+  <path d="M21 47h18M21 51h10" stroke="#92a2b9" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="m38 43 4 4 8-9" fill="none" stroke="#365cf5" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

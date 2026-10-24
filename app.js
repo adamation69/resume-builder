@@ -245,9 +245,9 @@
       return;
     }
     const fileBase=(state.values.name.trim()||"resume").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"resume";
-    const button=$("downloadTop");
-    button.disabled=true;
-    button.setAttribute("aria-busy","true");
+    const buttons=[$("downloadTop"),$("downloadPreview")];
+    buttons.forEach(button=>{button.disabled=true;button.setAttribute("aria-busy","true");});
+
     const resume=$("resumePreview");
     const content=resume.querySelector(".resume-inner");
     const originalFrameStyle=resume.getAttribute("style");
@@ -259,8 +259,8 @@
       if(originalFrameStyle===null) resume.removeAttribute("style"); else resume.setAttribute("style",originalFrameStyle);
       if(originalContentStyle===null) content.removeAttribute("style"); else content.setAttribute("style",originalContentStyle);
       if(originalFitScale===undefined) delete resume.dataset.fitScale; else resume.dataset.fitScale=originalFitScale;
-      button.disabled=false;
-      button.removeAttribute("aria-busy");
+      buttons.forEach(button=>{button.disabled=false;button.removeAttribute("aria-busy");});
+
     };
     try {
       await Promise.all([...resume.querySelectorAll("img")].map(image=>image.decode().catch(()=>{})));
@@ -335,7 +335,7 @@
   photoSizeSelect.addEventListener("change",()=>{state.photoSize=Number(photoSizeSelect.value);renderPreview();});
   $("removePhoto").addEventListener("click",()=>{state.photo="";$("photo").value="";renderPreview();});
   $("downloadTop").addEventListener("click",downloadPDF);
-  $("printButton").addEventListener("click",()=>{fitResumeToPage($("resumePreview").querySelector(".resume-inner"));window.print();});
+  $("downloadPreview").addEventListener("click",downloadPDF);
   window.addEventListener("beforeprint",()=>fitResumeToPage($("resumePreview").querySelector(".resume-inner")));
   window.addEventListener("afterprint",renderPreview);
   $("themeToggle").addEventListener("click",()=>setTheme(document.body.dataset.theme === "dark" ? "light" : "dark"));
