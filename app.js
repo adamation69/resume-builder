@@ -6,7 +6,7 @@
       {key:"job", label:"Professional title", value:"", placeholder:"Your Professional Title", wide:true},
       {key:"email", label:"Email address", value:"", placeholder:"you@example.com"},
       {key:"phone", label:"Phone number", value:"", placeholder:"+63 9123456789"},
-      {key:"location", label:"Complete Address", value:"", placeholder:"House Number, Street, Barangay, Municipality / City, Country, Zip Code", wide:true},
+      {key:"location", label:"Complete Address", value:"", placeholder:"House Number, Street, Barangay, Municipality / City, Province, Country, Zip Code", wide:true},
       {key:"summary", label:"Professional summary", value:"", placeholder:"Write a short introduction highlighting your experience, strengths, and career goals.", type:"textarea", wide:true}
     ]},
     { title: "Work experience", fields: []},
@@ -186,7 +186,7 @@
     const v=state.values;
     const photo=state.photo ? `<img class="avatar" src="${state.photo}" alt="Profile photo">` : "";
     const contactRow=(type,value)=>`<p class="contact-row">${contactIcon(type)}<span>${escapeHTML(value)}</span></p>`;
-    const contact=`<div class="contact">${contactRow("email",v.email.trim()||"you@example.com")}${contactRow("phone",v.phone.trim()||"+63 9123456789")}${contactRow("location",v.location.trim()||"House Number, Street, Barangay, Municipality / City, Country, Zip Code")}${v.website.trim()?contactRow("website",v.website):""}</div>`;
+    const contact=`<div class="contact">${contactRow("email",v.email.trim()||"you@example.com")}${contactRow("phone",v.phone.trim()||"+63 9123456789")}${contactRow("location",v.location.trim()||"House Number, Street, Barangay, Municipality / City, Province, Country, Zip Code")}${v.website.trim()?contactRow("website",v.website):""}</div>`;
     const expContent=state.experience.map((job,index)=>{
       const example=index===0||job.isNew;
       const title=[job.job.trim()||(example?"Job Title":""),job.company.trim()||(example?"Company Name":"")].filter(Boolean).join(" | ");
@@ -216,7 +216,7 @@
     const header=`<h2>${escapeHTML(v.name.trim()||"Full Name")}</h2><div class="subtitle">${escapeHTML(v.job.trim()||(state.titleDisabled?"":"Your Professional Title"))}</div>`;
     let html="";
     if(state.template==="Modern") html=`<aside class="side">${photo}${section("Contact",contact)}${skills}${languages}</aside><div class="main">${header}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}</div>`;
-    if(state.template==="Classic") html=`<div class="main">${photo}${header}${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}</div>`;
+    if(state.template==="Classic") html=`<div class="main"><div class="classic-header"><div class="classic-identity">${header}</div></div>${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}</div>`;
     if(state.template==="Minimal") html=`<div class="main"><div class="minimal-header"><div class="minimal-identity">${header}</div>${photo}</div>${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}</div>`;
     if(state.template==="Elegant") html=`<div class="hero">${photo}<div>${header}</div></div><div class="body">${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}</div>`;
     if(state.template==="Professional") html=`<div class="hero">${photo}<div>${header}${contact}</div></div><div class="body">${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}</div>`;
@@ -253,7 +253,10 @@
     const originalFrameStyle=resume.getAttribute("style");
     const originalContentStyle=content.getAttribute("style");
     const originalFitScale=resume.dataset.fitScale;
-    Object.assign(resume.style,{position:"fixed",left:"0",top:"0",width:"500px",height:"707px",minHeight:"707px",maxWidth:"none",minWidth:"0",aspectRatio:"210 / 297",margin:"0",overflow:"hidden",zIndex:"2147483647",pointerEvents:"none"});
+    const bounds=resume.getBoundingClientRect();
+    const captureWidth=Math.round(bounds.width);
+    const captureHeight=Math.round(bounds.height);
+    Object.assign(resume.style,{position:"fixed",left:"0",top:"0",width:`${captureWidth}px`,height:`${captureHeight}px`,minHeight:`${captureHeight}px`,maxWidth:"none",minWidth:"0",aspectRatio:"210 / 297",margin:"0",overflow:"hidden",zIndex:"2147483647",pointerEvents:"none"});
     fitResumeToPage(content);
     const restore=()=>{
       if(originalFrameStyle===null) resume.removeAttribute("style"); else resume.setAttribute("style",originalFrameStyle);
@@ -264,8 +267,8 @@
     };
     try {
       await Promise.all([...resume.querySelectorAll("img")].map(image=>image.decode().catch(()=>{})));
-      const width=resume.offsetWidth;
-      const height=resume.offsetHeight;
+      const width=captureWidth;
+      const height=captureHeight;
       const canvas=await window.html2canvas(resume,{
         scale:4,
         x:0,
