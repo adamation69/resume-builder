@@ -396,7 +396,13 @@
   }));
   $("back").addEventListener("click",()=>{state.step=Math.max(0,state.step-1);renderForm();});
   $("next").addEventListener("click",()=>{
-    if(state.step<sections.length-1){state.step++;renderForm();}
+    if(state.step<sections.length-1){
+      state.step++;
+      renderForm();
+      if(window.matchMedia("(max-width: 700px)").matches){
+        requestAnimationFrame(()=>document.querySelector(".editor").scrollIntoView({behavior:"smooth",block:"start"}));
+      }
+    }
     else { $("resumePreview").scrollIntoView({behavior:"smooth",block:"center"}); }
   });
   async function makeCenteredSquarePhoto(file) {
