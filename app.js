@@ -399,9 +399,7 @@
     if(state.step<sections.length-1){
       state.step++;
       renderForm();
-      if(window.matchMedia("(max-width: 700px)").matches){
-        requestAnimationFrame(()=>document.querySelector(".editor").scrollIntoView({behavior:"smooth",block:"start"}));
-      }
+      requestAnimationFrame(()=>document.querySelector(".editor").scrollIntoView({behavior:"smooth",block:"start"}));
     }
     else { $("resumePreview").scrollIntoView({behavior:"smooth",block:"center"}); }
   });

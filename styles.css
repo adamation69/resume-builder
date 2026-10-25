@@ -253,3 +253,4 @@ body[data-theme="dark"] .photo-shape-button[aria-pressed="true"]{background:#223
 .professional-reference li{margin:0;padding-left:1px;line-height:1.35}
 .professional-reference li:last-child{margin-bottom:0}
 .reference-card .field-grid{row-gap:10px}
+.editor{scroll-margin-top:84px}
