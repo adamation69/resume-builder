@@ -18,7 +18,7 @@
   const templates = ["Modern","Classic","Professional","Elegant","Minimal"];
   const skillExamples=["Communication","Problem Solving","Project Management","Microsoft Office"];
   const languageExamples=["English","Spanish"];
-  const state = {step:0, template:"Modern", photo:"", photoSize:120, photoShape:"circle", titleDisabled:false, summaryHeading:"Profile", experience:[{job:"",company:"",startMonth:"",startYear:"",endMonth:"",endYear:"",description:""}],education:[{degree:"",school:"",start:"",end:"",description:"",descriptionNone:false,descriptionTouched:false}],skills:["","","",""],languages:["",""],values:{}};
+  const state = {step:0, template:"Modern", photo:"", photoSize:120, photoShape:"circle", titleDisabled:false, summaryHeading:"Profile", experience:[{job:"",company:"",startMonth:"",startYear:"",endMonth:"",endYear:"",description:""}],education:[{degree:"",degreeNone:false,school:"",start:"",end:"",description:"",descriptionNone:false,descriptionTouched:false}],skills:["","","",""],languages:["",""],values:{}};
   const photoUpload = document.querySelector(".photo-upload");
   const photoUploadHome = photoUpload.parentElement;
   const photoSizeSelect = document.createElement("select");
@@ -93,7 +93,7 @@
         <input id="field-${f.key}" data-key="${f.key}" value="${escapeHTML(state.values[f.key])}" placeholder="${escapeHTML(f.placeholder||"")}">
       </div><div class="photo-slot"></div></div>`:`
       <div class="field ${f.wide?"wide":""}">
-        ${f.key==="job"?`<div class="title-label-row"><label for="field-${f.key}">${f.label}</label><button type="button" class="none-toggle ${state.titleDisabled?"active":""}" aria-pressed="${state.titleDisabled}">${state.titleDisabled?"Add professional title":"None"}</button></div>`:`<label for="field-${f.key}">${f.label}</label>`}
+        ${f.key==="job"?`<div class="title-label-row"><label for="field-${f.key}">${f.label}</label><button type="button" class="none-toggle ${state.titleDisabled?"active":""}" data-title-none aria-pressed="${state.titleDisabled}">${state.titleDisabled?"Add professional title":"None"}</button></div>`:`<label for="field-${f.key}">${f.label}</label>`}
         ${f.key==="summary"?`<label class="summary-choice-label" for="summaryHeading">Summary heading in resume</label><select class="summary-heading-select" id="summaryHeading"><option value="Profile" ${state.summaryHeading==="Profile"?"selected":""}>Profile</option><option value="About Me" ${state.summaryHeading==="About Me"?"selected":""}>About Me</option></select>`:""}
         ${f.type==="textarea"
           ? `<textarea id="field-${f.key}" data-key="${f.key}" rows="${f.key==="summary"?4:5}" placeholder="${escapeHTML(f.placeholder||"")}">${escapeHTML(state.values[f.key])}</textarea>`
@@ -104,17 +104,17 @@
         <section class="entry-card"><div class="entry-heading"><strong>Experience ${index+1}</strong>${state.experience.length>1?`<button type="button" class="text-button" data-remove-experience="${index}">Remove</button>`:""}</div>
           <div class="field-grid"><div class="field"><label>Job title</label><input data-experience="${index}" data-part="job" value="${escapeHTML(job.job)}" placeholder="Job Title"></div>
           <div class="field"><label>Company name</label><input data-experience="${index}" data-part="company" value="${escapeHTML(job.company)}" placeholder="Company Name"></div>
-          <div class="field"><label>Start month</label><input data-experience="${index}" data-part="startMonth" value="${escapeHTML(job.startMonth)}" placeholder="Jan"></div>
-          <div class="field"><label>Start year</label><input data-experience="${index}" data-part="startYear" value="${escapeHTML(job.startYear)}" placeholder="2023"></div>
-          <div class="field"><label>End month</label><input data-experience="${index}" data-part="endMonth" value="${escapeHTML(job.endMonth)}" placeholder="Month or Present"></div>
-          <div class="field"><label>End year</label><input data-experience="${index}" data-part="endYear" value="${escapeHTML(job.endYear)}" placeholder="Year or Present"></div>
+          <div class="field-pair"><div class="field"><label>Start month</label><input data-experience="${index}" data-part="startMonth" value="${escapeHTML(job.startMonth)}" placeholder="Jan"></div>
+          <div class="field"><label>Start year</label><input data-experience="${index}" data-part="startYear" value="${escapeHTML(job.startYear)}" placeholder="2023"></div></div>
+          <div class="field-pair"><div class="field"><label>End month</label><input data-experience="${index}" data-part="endMonth" value="${escapeHTML(job.endMonth)}" placeholder="Month or Present"></div>
+          <div class="field"><label>End year</label><input data-experience="${index}" data-part="endYear" value="${escapeHTML(job.endYear)}" placeholder="Year or Present"></div></div>
           <div class="field wide"><label>Description</label><textarea data-experience="${index}" data-part="description" rows="3" placeholder="Describe your responsibilities and achievements.">${escapeHTML(job.description)}</textarea></div></div>
         </section>`).join("")}</div><button type="button" class="btn btn-light add-entry" id="addExperience">+ Add experience</button>`;
     }
     if(state.step===2) {
       $("fields").innerHTML=`<h3 class="form-section-title">Education</h3><div class="education-list">${state.education.map((edu,index)=>`
         <section class="entry-card"><div class="entry-heading"><strong>Education ${index+1}</strong>${state.education.length>1?`<button type="button" class="text-button" data-remove-education="${index}">Remove</button>`:""}</div>
-          <div class="field-grid"><div class="field"><label>Degree or qualification</label><input data-education="${index}" data-part="degree" value="${escapeHTML(edu.degree)}" placeholder="Degree or qualification"></div>
+          <div class="field-grid"><div class="field"><div class="title-label-row"><label>Degree or qualification</label><button type="button" class="none-toggle ${edu.degreeNone?"active":""}" data-degree-none="${index}" aria-pressed="${edu.degreeNone}">${edu.degreeNone?"Add":"None"}</button></div><input data-education="${index}" data-part="degree" value="${escapeHTML(edu.degree)}" placeholder="Degree or qualification" ${edu.degreeNone?"disabled":""}></div>
           <div class="field"><label>School name</label><input data-education="${index}" data-part="school" value="${escapeHTML(edu.school)}" placeholder="School name"></div>
           <div class="field"><label>Start year</label><input data-education="${index}" data-part="start" value="${escapeHTML(edu.start)}" placeholder="Year"></div>
           <div class="field"><label>End year</label><input data-education="${index}" data-part="end" value="${escapeHTML(edu.end)}" placeholder="Year"></div>
@@ -134,7 +134,7 @@
     }));
     const summaryHeadingSelect=$("fields").querySelector("#summaryHeading");
     if(summaryHeadingSelect) summaryHeadingSelect.addEventListener("change",()=>{state.summaryHeading=summaryHeadingSelect.value;renderPreview();});
-    const noneToggle=$("fields").querySelector(".none-toggle:not([data-description-none])");
+    const noneToggle=$("fields").querySelector("[data-title-none]");
     if(noneToggle) noneToggle.addEventListener("click",()=>{
       state.titleDisabled=!state.titleDisabled;
       if(state.titleDisabled) state.values.job="";renderPreview();
@@ -154,6 +154,11 @@
       if(el.dataset.part==="description") item.descriptionTouched=true;
       renderPreview();
     }));
+    $("fields").querySelectorAll("[data-degree-none]").forEach(button=>button.addEventListener("click",()=>{
+      const edu=state.education[Number(button.dataset.degreeNone)];edu.degreeNone=!edu.degreeNone;
+      if(edu.degreeNone) edu.degree="";
+      renderPreview();renderForm();
+    }));
     $("fields").querySelectorAll("[data-description-none]").forEach(button=>button.addEventListener("click",()=>{
       const edu=state.education[Number(button.dataset.descriptionNone)];edu.descriptionNone=!edu.descriptionNone;
       if(edu.descriptionNone) edu.description="";
@@ -163,7 +168,7 @@
       state.education.splice(Number(button.dataset.removeEducation),1);renderPreview();renderForm();
     }));
     $("addEducation")?.addEventListener("click",()=>{
-      state.education.push({degree:"",school:"",start:"",end:"",description:"",descriptionNone:false,descriptionTouched:false,isNew:true});renderPreview();renderForm();
+      state.education.push({degree:"",degreeNone:false,school:"",start:"",end:"",description:"",descriptionNone:false,descriptionTouched:false,isNew:true});renderPreview();renderForm();
     });
     $("fields").querySelectorAll("[data-skill]").forEach(input=>input.addEventListener("input",()=>{
       state.skills[Number(input.dataset.skill)]=input.value;renderPreview();
@@ -203,6 +208,39 @@
     frame.dataset.fitScale=String(scale);
     return scale;
   }
+  function setMobilePreviewGeometry(frame) {
+    const stage=frame.closest(".preview-stage");
+    const mobile=window.matchMedia("(max-width: 700px)").matches;
+    if(!stage) return;
+    if(!mobile) {
+      frame.style.removeProperty("width");
+      frame.style.removeProperty("height");
+      frame.style.removeProperty("min-height");
+      frame.style.removeProperty("max-width");
+      frame.style.removeProperty("aspect-ratio");
+      frame.style.removeProperty("transform");
+      frame.style.removeProperty("left");
+      frame.style.removeProperty("transform-origin");
+      frame.style.removeProperty("--mobile-preview-scale");
+      stage.style.removeProperty("height");
+      return;
+    }
+    const stageStyle=getComputedStyle(stage);
+    const horizontalPadding=parseFloat(stageStyle.paddingLeft)+parseFloat(stageStyle.paddingRight);
+    const verticalPadding=parseFloat(stageStyle.paddingTop)+parseFloat(stageStyle.paddingBottom);
+    const availableWidth=Math.max(1,stage.clientWidth-horizontalPadding);
+    const scale=Math.min(1,availableWidth/500);
+    frame.style.width="500px";
+    frame.style.height="707px";
+    frame.style.minHeight="707px";
+    frame.style.maxWidth="none";
+    frame.style.aspectRatio="auto";
+    frame.style.setProperty("--mobile-preview-scale",String(scale));
+    frame.style.transform="scale(var(--mobile-preview-scale))";
+    frame.style.transformOrigin="top left";
+    frame.style.left=`${(availableWidth-500*scale)/2}px`;
+    stage.style.height=`${Math.ceil(707*scale+verticalPadding)}px`;
+  }
   function renderPreview() {
     const v=state.values;
     const photo=state.photo ? `<img class="avatar" src="${state.photo}" alt="Profile photo">` : "";
@@ -224,7 +262,7 @@
     const exp=section("Work experience",expContent);
     const eduContent=state.education.map(item=>{
       const example=state.education.indexOf(item)===0||item.isNew;
-      const title=[item.degree.trim()||(example?"Degree or Qualification":""),item.school.trim()||(example?"School Name":"")].filter(Boolean).join(" | ");
+      const title=[item.degreeNone?"":item.degree.trim()||(example?"Degree or Qualification":""),item.school.trim()||(example?"School Name":"")].filter(Boolean).join(" | ");
       const years=[item.start.trim()||(example?"2016":""),item.end.trim()||(example?"2020":"")].filter(Boolean).join(" – ");
       const description=item.descriptionNone?"":item.description.trim()||(example&&!item.descriptionTouched?"Relevant coursework, honors, or achievements.":"");
       const lines=[title,years,description].filter(Boolean);
@@ -242,6 +280,7 @@
     if(state.template==="Elegant") html=`<div class="hero">${photo}<div>${header}</div></div><div class="body">${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}</div>`;
     if(state.template==="Professional") html=`<div class="hero">${photo}<div>${header}${contact}</div></div><div class="body">${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}</div>`;
     $("resumePreview").className=`resume ${state.template.toLowerCase()}`;
+    setMobilePreviewGeometry($("resumePreview"));
     const previewWidth=$("resumePreview").clientWidth||500;
     const renderedPhotoSize=Math.round(previewWidth*state.photoSize/500);
     $("resumePreview").style.setProperty("--photo-size",`${renderedPhotoSize}px`);
@@ -252,6 +291,7 @@
     $("resumePreview").style.setProperty("--photo-detail-size",`${photoTextSizes[2]}px`);
     $("resumePreview").innerHTML=`<div class="resume-inner">${html}</div>`;
     fitResumeToPage($("resumePreview").querySelector(".resume-inner"));
+    setMobilePreviewGeometry($("resumePreview"));
     $("photoThumb").style.borderRadius=state.photoShape==="circle"?"50%":"0";
     $("photoThumb").src=state.photo || "data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" rx="40" fill="#edf1f7"/><circle cx="40" cy="29" r="14" fill="#b5c0d2"/><path d="M12 80Q14 48 40 48T68 80" fill="#b5c0d2"/></svg>');
   }
@@ -369,5 +409,6 @@
   window.addEventListener("afterprint",renderPreview);
   $("themeToggle").addEventListener("click",()=>setTheme(document.body.dataset.theme === "dark" ? "light" : "dark"));
   setTheme(localStorage.getItem("resume-builder-theme") === "dark" ? "dark" : "light");
+  window.addEventListener("resize",()=>renderPreview());
   renderForm();renderTemplates();renderPreview();
 })();
