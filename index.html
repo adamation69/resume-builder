@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Create a professional resume with customizable templates and A4 PDF export.">
   <title>Resume Builder</title>
-  <link rel="stylesheet" href="styles.css?v=mobile-1">
+  <link rel="stylesheet" href="styles.css?v=import-step-2">
   <link rel="icon" type="image/svg+xml" href="resume-logo.svg">
 </head>
 <body>
@@ -32,8 +32,8 @@
           <button class="step" data-step="2">03 <span>Education</span></button>
           <button class="step" data-step="3">04 <span>Skills</span></button>
         </nav>
-        <section class="resume-import" aria-labelledby="resumeImportTitle">
-          <div><h3 id="resumeImportTitle">Import an existing resume</h3><p class="muted">Choose a PDF to scan and fill matching details. The file stays on this device.</p></div>
+        <section class="resume-import" id="resumeImport" aria-labelledby="resumeImportTitle">
+          <div><h3 id="resumeImportTitle">Import an existing resume</h3><p class="muted">Upload a PDF to automatically fill in matching resume details.</p></div>
           <label class="btn btn-light resume-import-button" for="resumePdf">Choose PDF</label>
           <input type="file" id="resumePdf" accept=".pdf,application/pdf" hidden>
           <p class="resume-import-status" id="resumeImportStatus" role="status" aria-live="polite"></p>
@@ -69,6 +69,6 @@
   </main>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" referrerpolicy="no-referrer"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" referrerpolicy="no-referrer"></script>
-  <script src="app.js?v=appearance-3"></script>
+  <script src="app.js?v=noexp-experience-3"></script>
 </body>
 </html>
