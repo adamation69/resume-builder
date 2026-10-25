@@ -29,7 +29,7 @@
   const templates = ["Modern","Classic","Professional","Elegant","Minimal","Executive","Compact","Sidebar","Timeline","Monochrome","No Experience"];
   const skillExamples=["Communication","Problem Solving","Project Management","Microsoft Office"];
   const languageExamples=["English","Spanish"];
-  const state = {step:0, template:"Modern", photo:"", photoSize:120, photoShape:"circle", titleDisabled:false, summaryHeading:"Profile", experience:[{job:"",company:"",startMonth:"",startYear:"",endMonth:"",endYear:"",description:"",isExample:true}],education:[{degree:"",degreeNone:false,school:"",start:"",end:"",description:"",descriptionNone:false,descriptionTouched:false,isExample:true}],skills:["","","",""],languages:["",""],projects:[],references:[],values:{}};
+  const state = {step:0, template:"Modern", photo:"", photoSize:120, photoShape:"circle", titleDisabled:false, summaryHeading:"Profile", previewPage:0,previewPages:[0],previewContentHeight:707,experience:[{job:"",company:"",startMonth:"",startYear:"",endMonth:"",endYear:"",description:"",isExample:true}],education:[{degree:"",degreeNone:false,school:"",start:"",end:"",description:"",descriptionNone:false,descriptionTouched:false,isExample:true}],skills:["","","",""],languages:["",""],projects:[],references:[],values:{}};
   const photoUpload = document.querySelector(".photo-upload");
   const photoUploadHome = photoUpload.parentElement;
   const photoSizeSelect = document.createElement("select");
@@ -295,19 +295,45 @@
     const frame=content.closest("#resumePreview");
     if(!frame) return 1;
     frame.dataset.fitScale="1";
-    const pageWidth=content.clientWidth;
-    const frameStyle=getComputedStyle(frame);
-    const pageHeight=frame.clientHeight-parseFloat(frameStyle.paddingTop)-parseFloat(frameStyle.paddingBottom);
-    const contentHeight=content.scrollHeight;
-    if(!pageWidth||!pageHeight||contentHeight<=pageHeight) return 1;
-    const scale=Math.min(1,(pageHeight-12)/contentHeight);
-    content.style.width=`${pageWidth/scale}px`;
-    content.style.height=`${pageHeight/scale}px`;
-    content.style.minHeight=`${pageHeight/scale}px`;
-    content.style.transformOrigin="top left";
-    content.style.transform=`scale(${scale})`;
-    frame.dataset.fitScale=String(scale);
-    return scale;
+    return 1;
+  }
+  function getResumePageBreaks(frame) {
+    const frameTop=frame.getBoundingClientRect().top;
+    const contentColumn=frame.querySelector(".main,.sidebar-main,.mono-main,.noexp-main,.body,.executive-body,.compact-body,.timeline-body")||frame;
+    const positions=[];
+    const addPosition=element=>{
+      const position=element.getBoundingClientRect().top-frameTop;
+      if(position>0)positions.push(Math.round(position));
+    };
+    contentColumn.querySelectorAll("h3").forEach(addPosition);
+    contentColumn.querySelectorAll(".item,.professional-reference").forEach(element=>{
+      if(element.previousElementSibling?.tagName!=="H3")addPosition(element);
+    });
+    contentColumn.querySelectorAll(".contact-row").forEach(row=>{
+      const contact=row.parentElement;
+      if(!(contact.firstElementChild===row&&contact.previousElementSibling?.tagName==="H3"))addPosition(row);
+    });
+    contentColumn.querySelectorAll("p").forEach(paragraph=>{
+      if(paragraph.closest(".item,.professional-reference,.contact"))return;
+      if(paragraph.previousElementSibling?.tagName!=="H3")addPosition(paragraph);
+    });
+    return [...new Set(positions)].sort((a,b)=>a-b);
+  }
+  function getResumePageStarts(frame,totalHeight) {
+    const pageHeight=707,pagePadding=25;
+    const breakPoints=getResumePageBreaks(frame);
+    const starts=[0];
+    let sourceY=0,pageIndex=0;
+    while(totalHeight-sourceY>pageHeight-(pageIndex?pagePadding:0)){
+      const capacity=pageHeight-(pageIndex?pagePadding:0);
+      const maxEnd=Math.min(totalHeight,sourceY+capacity);
+      const earliestUsefulBreak=sourceY+Math.round(capacity*.55);
+      const candidates=breakPoints.filter(position=>position>=earliestUsefulBreak&&position<=maxEnd);
+      const endY=candidates.length?candidates[candidates.length-1]:maxEnd;
+      if(endY<=sourceY)break;
+      starts.push(endY);sourceY=endY;pageIndex++;
+    }
+    return starts;
   }
   function setMobilePreviewGeometry(frame) {
     const stage=frame.closest(".preview-stage");
@@ -315,14 +341,15 @@
     if(!stage) return;
     if(!mobile) {
       frame.style.removeProperty("width");
-      frame.style.removeProperty("height");
-      frame.style.removeProperty("min-height");
       frame.style.removeProperty("max-width");
-      frame.style.removeProperty("aspect-ratio");
-      frame.style.removeProperty("transform");
       frame.style.removeProperty("left");
-      frame.style.removeProperty("transform-origin");
       frame.style.removeProperty("--mobile-preview-scale");
+      frame.style.height="707px";
+      frame.style.minHeight="707px";
+      frame.style.aspectRatio="210 / 297";
+      frame.style.overflow="hidden";
+      frame.style.position="relative";
+      frame.style.transform="none";
       stage.style.removeProperty("height");
       return;
     }
@@ -336,11 +363,80 @@
     frame.style.minHeight="707px";
     frame.style.maxWidth="none";
     frame.style.aspectRatio="auto";
+    frame.style.overflow="hidden";
+    frame.style.position="relative";
     frame.style.setProperty("--mobile-preview-scale",String(scale));
     frame.style.transform="scale(var(--mobile-preview-scale))";
     frame.style.transformOrigin="top left";
     frame.style.left=`${(availableWidth-500*scale)/2}px`;
     stage.style.height=`${Math.ceil(707*scale+verticalPadding)}px`;
+  }
+  function showPreviewPage(pageIndex) {
+    const frame=$("resumePreview");
+    const inner=frame.querySelector(".resume-inner");
+    if(!inner)return;
+    state.previewPage=Math.max(0,Math.min(pageIndex,state.previewPages.length-1));
+    frame.style.transform="none";
+    const pageStart=state.previewPages[state.previewPage]||0;
+    const pageEnd=state.previewPages[state.previewPage+1]??state.previewContentHeight;
+    const pagePadding=state.previewPage?25:0;
+    frame.style.position="relative";
+    frame.style.height="707px";
+    frame.style.minHeight="707px";
+    frame.style.aspectRatio="210 / 297";
+    frame.style.overflow="hidden";
+    inner.style.transform=pageStart?`translateY(${pagePadding-pageStart}px)`:"none";
+    inner.style.transformOrigin="top left";
+    const frameRect=frame.getBoundingClientRect();
+    const contentColumn=frame.querySelector(".main,.sidebar-main,.mono-main,.noexp-main,.body,.executive-body,.compact-body,.timeline-body")||inner;
+    const contentRect=contentColumn.getBoundingClientRect();
+    const mainMask=frame.querySelector(".resume-page-main-mask");
+    const sideMask=frame.querySelector(".resume-page-side-mask");
+    const mainBottomMask=frame.querySelector(".resume-page-main-bottom-mask");
+    const sideBottomMask=frame.querySelector(".resume-page-side-bottom-mask");
+    if(mainMask){
+      mainMask.style.display=pagePadding?"block":"none";
+      mainMask.style.left=`${contentRect.left-frameRect.left}px`;
+      mainMask.style.width=`${contentRect.width}px`;
+      mainMask.style.height=`${pagePadding}px`;
+      const contentColor=getComputedStyle(contentColumn).backgroundColor;
+      mainMask.style.backgroundColor=contentColor==="rgba(0, 0, 0, 0)"?"#ffffff":contentColor;
+    }
+    const bottomTop=Math.min(707,pagePadding+pageEnd-pageStart);
+    if(mainBottomMask){
+      mainBottomMask.style.display=bottomTop<707?"block":"none";
+      mainBottomMask.style.left=`${contentRect.left-frameRect.left}px`;
+      mainBottomMask.style.width=`${contentRect.width}px`;
+      mainBottomMask.style.top=`${bottomTop}px`;
+      mainBottomMask.style.height=`${Math.max(0,707-bottomTop)}px`;
+      const contentColor=getComputedStyle(contentColumn).backgroundColor;
+      mainBottomMask.style.backgroundColor=contentColor==="rgba(0, 0, 0, 0)"?"#ffffff":contentColor;
+    }
+    const sidePanel=frame.querySelector(".side,.sidebar-side,.mono-side,.noexp-side");
+    if(sideMask&&sidePanel&&pagePadding){
+      const sideRect=sidePanel.getBoundingClientRect();
+      const sideColor=getComputedStyle(sidePanel).backgroundColor;
+      sideMask.style.display="block";
+      sideMask.style.left=`${sideRect.left-frameRect.left}px`;
+      sideMask.style.width=`${sideRect.width}px`;
+      sideMask.style.height=`${pagePadding}px`;
+      sideMask.style.backgroundColor=sideColor==="rgba(0, 0, 0, 0)"||sideColor==="transparent"?"#ffffff":sideColor;
+    }else if(sideMask)sideMask.style.display="none";
+    if(sideBottomMask&&sidePanel&&bottomTop<707){
+      const sideRect=sidePanel.getBoundingClientRect();
+      const sideColor=getComputedStyle(sidePanel).backgroundColor;
+      sideBottomMask.style.display="block";
+      sideBottomMask.style.left=`${sideRect.left-frameRect.left}px`;
+      sideBottomMask.style.width=`${sideRect.width}px`;
+      sideBottomMask.style.top=`${bottomTop}px`;
+      sideBottomMask.style.height=`${Math.max(0,707-bottomTop)}px`;
+      sideBottomMask.style.backgroundColor=sideColor==="rgba(0, 0, 0, 0)"||sideColor==="transparent"?"#ffffff":sideColor;
+    }else if(sideBottomMask)sideBottomMask.style.display="none";
+    $("resumePageCount").textContent=`${state.previewPage+1} / ${state.previewPages.length}`;
+    $("resumePageCount").parentElement.hidden=state.previewPages.length<=1;
+    $("previousResumePage").disabled=state.previewPage===0;
+    $("nextResumePage").disabled=state.previewPage>=state.previewPages.length-1;
+    setMobilePreviewGeometry(frame);
   }
   function renderPreview() {
     const v=state.values;
@@ -394,19 +490,30 @@
     if(state.template==="Timeline") html=`<div class="timeline-header"><div class="timeline-identity">${header}</div>${photo}</div><div class="timeline-body">${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}${referencesSection}</div>`;
     if(state.template==="Monochrome") html=`<div class="mono-header">${photo}<div>${header}</div></div><div class="mono-grid"><div class="mono-main">${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}</div><aside class="mono-side">${section("Contact",contact)}${skills}${languages}${referencesSection}</aside></div>`;
     if(state.template==="No Experience") { const detailRows=[["Nickname",v.nickname],["Age",v.age],["Sex",v.sex],["Birthday",v.birthday],["Birthplace",v.birthplace],["Father's name",v.fatherName],["Mother's name",v.motherName],["Civil status",v.civilStatus],["Nationality",v.nationality],["Religion",v.religion]].filter(([,value])=>value.trim()).map(([label,value])=>`<p class="noexp-detail"><strong>${label}</strong><span>${escapeHTML(value)}</span></p>`).join(""); const projectItems=state.projects.map(project=>{const parts=[project.name.trim(),project.context.trim(),project.year.trim(),project.description.trim()].filter(Boolean);return parts.length?`<div class="item">${textLines(parts.join("\n"))}</div>`:"";}).join(""); const expNote=v.experienceNote.trim()||"No formal work experience yet. Willing to learn and contribute."; const strengthItems=listItems(v.strengths.trim()||"Willingness to learn\nCommunication\nTeamwork"); html=`<aside class="noexp-side">${photo}${section("Contact",contact)}${detailRows?section("Personal information",detailRows):""}${skills}${section("Strengths",strengthItems)}${languages}</aside><div class="noexp-main">${header}${section(state.summaryHeading,textLines(summaryText))}${edu}${section("Experience",textLines(expNote))}${projectItems?section("Projects & activities",projectItems):""}${referencesSection}</div>`; }
-    $("resumePreview").className=`resume ${state.template.toLowerCase().replace(/\s+/g,"-")}`;
-    setMobilePreviewGeometry($("resumePreview"));
-    const previewWidth=$("resumePreview").clientWidth||500;
+    const previewFrame=$("resumePreview");
+    previewFrame.className=`resume ${state.template.toLowerCase().replace(/\s+/g,"-")}`;
+    previewFrame.style.height="auto";
+    previewFrame.style.minHeight="707px";
+    previewFrame.style.aspectRatio="auto";
+    previewFrame.style.overflow="visible";
+    previewFrame.style.position="relative";
+    previewFrame.style.transform="none";
+    if(window.matchMedia("(max-width: 700px)").matches){previewFrame.style.width="500px";previewFrame.style.maxWidth="none";}
+    else{previewFrame.style.removeProperty("width");previewFrame.style.removeProperty("max-width");previewFrame.style.removeProperty("left");}
+    const previewWidth=previewFrame.clientWidth||500;
     const renderedPhotoSize=Math.round(previewWidth*state.photoSize/500);
-    $("resumePreview").style.setProperty("--photo-size",`${renderedPhotoSize}px`);
-    $("resumePreview").style.setProperty("--photo-radius",state.photoShape==="circle"?"50%":"0");
+    previewFrame.style.setProperty("--photo-size",`${renderedPhotoSize}px`);
+    previewFrame.style.setProperty("--photo-radius",state.photoShape==="circle"?"50%":"0");
     const photoTextSizes=state.photo?({84:[18,9,7.5],120:[21,10,8],156:[24,11,8.5]}[state.photoSize]):[20,9,8];
-    $("resumePreview").style.setProperty("--photo-header-size",`${photoTextSizes[0]}px`);
-    $("resumePreview").style.setProperty("--photo-subtitle-size",`${photoTextSizes[1]}px`);
-    $("resumePreview").style.setProperty("--photo-detail-size",`${photoTextSizes[2]}px`);
-    $("resumePreview").innerHTML=`<div class="resume-inner">${html}</div>`;
-    fitResumeToPage($("resumePreview").querySelector(".resume-inner"));
-    setMobilePreviewGeometry($("resumePreview"));
+    previewFrame.style.setProperty("--photo-header-size",`${photoTextSizes[0]}px`);
+    previewFrame.style.setProperty("--photo-subtitle-size",`${photoTextSizes[1]}px`);
+    previewFrame.style.setProperty("--photo-detail-size",`${photoTextSizes[2]}px`);
+    previewFrame.innerHTML=`<div class="resume-inner">${html}</div><div class="resume-page-mask resume-page-main-mask" aria-hidden="true"></div><div class="resume-page-mask resume-page-side-mask" aria-hidden="true"></div><div class="resume-page-mask resume-page-main-bottom-mask" aria-hidden="true"></div><div class="resume-page-mask resume-page-side-bottom-mask" aria-hidden="true"></div>`;
+    fitResumeToPage(previewFrame.querySelector(".resume-inner"));
+    state.previewContentHeight=Math.max(707,previewFrame.scrollHeight);
+    state.previewPages=getResumePageStarts(previewFrame,state.previewContentHeight);
+    state.previewPage=Math.min(state.previewPage,state.previewPages.length-1);
+    showPreviewPage(state.previewPage);
     $("photoThumb").style.borderRadius=state.photoShape==="circle"?"50%":"0";
     $("photoThumb").src=state.photo || "data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" rx="40" fill="#edf1f7"/><circle cx="40" cy="29" r="14" fill="#b5c0d2"/><path d="M12 80Q14 48 40 48T68 80" fill="#b5c0d2"/></svg>');
   }
@@ -434,23 +541,27 @@
     const originalFrameStyle=resume.getAttribute("style");
     const originalContentStyle=content.getAttribute("style");
     const originalFitScale=resume.dataset.fitScale;
-    // The mobile preview is visually scaled with CSS. Capture its unscaled A4
-    // canvas so the PDF keeps the same proportions and full-page placement.
+    const pageMasks=[...resume.querySelectorAll(".resume-page-mask")];
+    const originalPageMaskDisplays=pageMasks.map(mask=>mask.style.display);
+    pageMasks.forEach(mask=>mask.style.display="none");
+    // Capture the full-height resume without shrinking its typography.
     const captureWidth=500;
-    const captureHeight=707;
-    Object.assign(resume.style,{position:"fixed",left:"0",top:"0",width:`${captureWidth}px`,height:`${captureHeight}px`,minHeight:`${captureHeight}px`,maxWidth:"none",minWidth:"0",aspectRatio:"210 / 297",margin:"0",overflow:"hidden",zIndex:"2147483647",pointerEvents:"none",transform:"none",transformOrigin:"top left"});
+    Object.assign(resume.style,{position:"fixed",left:"0",top:"0",width:`${captureWidth}px`,height:"auto",minHeight:"707px",maxWidth:"none",minWidth:"0",aspectRatio:"auto",margin:"0",overflow:"visible",zIndex:"2147483647",pointerEvents:"none",transform:"none",transformOrigin:"top left"});
     fitResumeToPage(content);
     const restore=()=>{
       if(originalFrameStyle===null) resume.removeAttribute("style"); else resume.setAttribute("style",originalFrameStyle);
       if(originalContentStyle===null) content.removeAttribute("style"); else content.setAttribute("style",originalContentStyle);
       if(originalFitScale===undefined) delete resume.dataset.fitScale; else resume.dataset.fitScale=originalFitScale;
+      pageMasks.forEach((mask,index)=>mask.style.display=originalPageMaskDisplays[index]);
       buttons.forEach(button=>{button.disabled=false;button.removeAttribute("aria-busy");});
 
     };
     try {
       await Promise.all([...resume.querySelectorAll("img")].map(image=>image.decode().catch(()=>{})));
       const width=captureWidth;
-      const height=captureHeight;
+      const height=Math.max(707,resume.scrollHeight,content.scrollHeight);
+      resume.style.height=`${height}px`;
+      const pageStarts=getResumePageStarts(resume,height);
       const canvas=await window.html2canvas(resume,{
         scale:4,
         x:0,
@@ -458,14 +569,44 @@
         width,
         height,
         windowWidth:document.documentElement.clientWidth,
-        windowHeight:document.documentElement.clientHeight,
+        windowHeight:Math.max(document.documentElement.clientHeight,height),
         useCORS:true,
         backgroundColor:"#ffffff",
         scrollX:0,
         scrollY:0
       });
       const pdf=new window.jspdf.jsPDF({unit:"mm",format:"a4",orientation:"portrait",compress:true});
-      pdf.addImage(canvas.toDataURL("image/jpeg",.98),"JPEG",0,0,210,297,undefined,"FAST");
+      const pageCanvasHeight=Math.round(canvas.width*297/210);
+      const captureScale=canvas.width/width;
+      const pageStartPixels=pageStarts.map(position=>Math.round(position*captureScale));
+      const pageTopPadding=Math.round(25*captureScale);
+      const pageCount=pageStartPixels.length;
+      const frameRect=resume.getBoundingClientRect();
+      const sidePanel=resume.querySelector(".side,.sidebar-side,.mono-side,.noexp-side");
+      const sideStyle=sidePanel?getComputedStyle(sidePanel):null;
+      const sideRect=sidePanel?sidePanel.getBoundingClientRect():null;
+      const sideColor=sideStyle?.backgroundColor;
+      const sideHasColor=sideColor&&sideColor!=="rgba(0, 0, 0, 0)"&&sideColor!=="transparent";
+      for(let pageIndex=0;pageIndex<pageCount;pageIndex++){
+        const sourceY=pageStartPixels[pageIndex];
+        const endY=pageIndex+1<pageCount?pageStartPixels[pageIndex+1]:canvas.height;
+        const pageOffset=pageIndex===0?0:pageTopPadding;
+        const sliceHeight=endY-sourceY;
+        const pageCanvas=document.createElement("canvas");
+        pageCanvas.width=canvas.width;pageCanvas.height=pageCanvasHeight;
+        const pageContext=pageCanvas.getContext("2d");
+        if(!pageContext)throw new Error("PDF page rendering is unavailable.");
+        pageContext.fillStyle="#ffffff";pageContext.fillRect(0,0,pageCanvas.width,pageCanvas.height);
+        if(sideHasColor){
+          const ratio=canvas.width/width;
+          const sideX=Math.max(0,(sideRect.left-frameRect.left)*ratio);
+          const sideWidth=Math.min(pageCanvas.width-sideX,sideRect.width*ratio);
+          pageContext.fillStyle=sideColor;pageContext.fillRect(sideX,0,sideWidth,pageCanvas.height);
+        }
+        pageContext.drawImage(canvas,0,sourceY,canvas.width,sliceHeight,0,pageOffset,canvas.width,sliceHeight);
+        if(pageIndex>0)pdf.addPage();
+        pdf.addImage(pageCanvas.toDataURL("image/jpeg",.98),"JPEG",0,0,210,297,undefined,"FAST");
+      }
       pdf.save(`${fileBase}.pdf`);
     } catch(error) {
       console.error("PDF download failed",error);
@@ -526,6 +667,8 @@
   $("removePhoto").addEventListener("click",()=>{state.photo="";$("photo").value="";renderPreview();});
   $("downloadTop").addEventListener("click",downloadPDF);
   $("downloadPreview").addEventListener("click",downloadPDF);
+  $("previousResumePage").addEventListener("click",()=>showPreviewPage(state.previewPage-1));
+  $("nextResumePage").addEventListener("click",()=>showPreviewPage(state.previewPage+1));
   window.addEventListener("beforeprint",()=>fitResumeToPage($("resumePreview").querySelector(".resume-inner")));
   window.addEventListener("afterprint",renderPreview);
   $("themeToggle").addEventListener("click",()=>setTheme(document.body.dataset.theme === "dark" ? "light" : "dark"));

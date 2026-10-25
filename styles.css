@@ -272,3 +272,21 @@ body[data-theme="dark"] .photo-shape-button[aria-pressed="true"]{background:#223
 .resume.modern .side .professional-reference ul,.resume.sidebar .sidebar-side .professional-reference ul,.resume.monochrome .mono-side .professional-reference ul{padding-left:12px}
 .reference-card .field-grid{row-gap:10px}
 .editor{scroll-margin-top:84px}
+
+/* Preserve resume typography and allow long content to continue below page one. */
+#resumePreview{height:auto;aspect-ratio:auto;overflow:visible}
+#resumePreview .resume-inner,#resumePreview.modern .resume-inner{min-height:707px;overflow:visible}
+.resume-page-mask{position:absolute;z-index:5;top:0;pointer-events:none}
+.preview-page-controls{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:10px;color:var(--muted);font-size:12px}
+.preview-page-controls[hidden]{display:none}
+.preview-page-arrow{display:grid;place-items:center;width:30px;height:30px;border:1px solid var(--line);border-radius:7px;background:var(--white);color:var(--ink);font:inherit;font-size:18px;line-height:1;cursor:pointer}
+.preview-page-arrow:hover:not(:disabled){border-color:var(--blue);color:var(--blue)}
+.preview-page-arrow:disabled{opacity:.4;cursor:default}
+.preview-page-arrow:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+@media print{
+  #resumePreview .resume-page-mask{display:none!important}
+  #resumePreview{position:relative!important;height:auto!important;min-height:297mm!important;overflow:visible!important;aspect-ratio:auto!important}
+  #resumePreview .resume-inner,#resumePreview.modern .resume-inner{height:auto!important;min-height:297mm!important;overflow:visible!important;transform:none!important}
+  #resumePreview .item,#resumePreview .professional-reference{break-inside:avoid;page-break-inside:avoid}
+  #resumePreview h3{break-after:avoid;page-break-after:avoid}
+}
