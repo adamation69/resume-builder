@@ -15,7 +15,7 @@
       {key:"website", label:"Website / LinkedIn (optional)", value:"", placeholder:"linkedin.com/in/yourname", wide:true}
     ]}
   ];
-  const templates = ["Modern","Classic","Professional","Elegant","Minimal"];
+  const templates = ["Modern","Classic","Professional","Elegant","Minimal","Executive","Compact","Sidebar","Timeline","Monochrome"];
   const skillExamples=["Communication","Problem Solving","Project Management","Microsoft Office"];
   const languageExamples=["English","Spanish"];
   const state = {step:0, template:"Modern", photo:"", photoSize:120, photoShape:"circle", titleDisabled:false, summaryHeading:"Profile", experience:[{job:"",company:"",startMonth:"",startYear:"",endMonth:"",endYear:"",description:""}],education:[{degree:"",degreeNone:false,school:"",start:"",end:"",description:"",descriptionNone:false,descriptionTouched:false}],skills:["","","",""],languages:["",""],values:{}};
@@ -279,6 +279,11 @@
     if(state.template==="Minimal") html=`<div class="main"><div class="minimal-header"><div class="minimal-identity">${header}</div>${photo}</div>${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}</div>`;
     if(state.template==="Elegant") html=`<div class="hero">${photo}<div>${header}</div></div><div class="body">${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}</div>`;
     if(state.template==="Professional") html=`<div class="hero">${photo}<div>${header}${contact}</div></div><div class="body">${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}</div>`;
+    if(state.template==="Executive") html=`<div class="executive-header">${photo}<div>${header}${contact}</div></div><div class="executive-body">${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}</div>`;
+    if(state.template==="Compact") html=`<div class="compact-header"><div>${header}${contact}</div>${photo}</div><div class="compact-body">${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}</div>`;
+    if(state.template==="Sidebar") html=`<div class="sidebar-main">${header}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}</div><aside class="sidebar-side">${photo}${section("Contact",contact)}${skills}${languages}</aside>`;
+    if(state.template==="Timeline") html=`<div class="timeline-header"><div class="timeline-identity">${header}</div>${photo}</div><div class="timeline-body">${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}</div>`;
+    if(state.template==="Monochrome") html=`<div class="mono-header">${photo}<div>${header}</div></div><div class="mono-grid"><div class="mono-main">${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}</div><aside class="mono-side">${section("Contact",contact)}${skills}${languages}</aside></div>`;
     $("resumePreview").className=`resume ${state.template.toLowerCase()}`;
     setMobilePreviewGeometry($("resumePreview"));
     const previewWidth=$("resumePreview").clientWidth||500;
@@ -296,8 +301,9 @@
     $("photoThumb").src=state.photo || "data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80"><rect width="80" height="80" rx="40" fill="#edf1f7"/><circle cx="40" cy="29" r="14" fill="#b5c0d2"/><path d="M12 80Q14 48 40 48T68 80" fill="#b5c0d2"/></svg>');
   }
   function renderTemplates() {
+    document.querySelector(".template-count").textContent=`${templates.length} templates`;
     $("templateGrid").innerHTML=templates.map(name=>`<button type="button" class="template-option ${state.template===name?"selected":""}" data-template="${name}">
-      <div class="mini-page ${name==="Elegant"?"mini-elegant":""}"><div class="mini-side ${(["Classic","Minimal","Elegant"].includes(name)?"hidden":"")}"></div><div class="mini-lines"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+      <div class="mini-page mini-${name.toLowerCase()}"><div class="mini-side ${(["Classic","Minimal","Elegant","Compact","Timeline"].includes(name)?"hidden":"")}"></div><div class="mini-lines"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
       <strong>${name}</strong><small>${state.template===name?"✓ Selected":"Select layout"}</small>
     </button>`).join("");
     $("templateGrid").querySelectorAll("[data-template]").forEach(button=>button.addEventListener("click",()=>{

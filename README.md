@@ -6,9 +6,9 @@ A responsive resume-builder website built with plain HTML, CSS, and JavaScript. 
 
 - Modern, responsive interface
 - A4 resume preview and print-to-PDF workflow
-- Five layouts: Modern, Classic, Professional, Creative, and Minimal
+- Ten layouts: Modern, Classic, Professional, Elegant, Minimal, Executive, Compact, Sidebar, Timeline, and Monochrome
 - Editable personal details, work experience, education, skills, and languages
-- Optional profile photo upload (JPG, PNG, or WebP; maximum 5 MB)
+- Optional profile photo upload with centered cropping and adjustable size and shape
 - Live preview updates as you edit
 - Works locally in a modern browser
 

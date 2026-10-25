@@ -145,3 +145,83 @@ body[data-theme="dark"] .photo-shape-button[aria-pressed="true"]{background:#223
 @media(max-width:520px){.form-actions{display:flex;flex-wrap:nowrap;gap:10px}.form-actions .btn{flex:1 1 0;min-width:0;padding:9px 10px;font-size:13px}}
 
 .entry-card [data-degree-none]{flex:0 0 auto;padding:4px 8px;white-space:nowrap;line-height:1.2}
+
+/* Additional resume templates. */
+.resume.executive,.resume.compact,.resume.timeline,.resume.monochrome{display:block;padding:0}
+.resume.executive .executive-header{display:flex;align-items:center;gap:18px;padding:26px 24px;background:#1b2c49;color:#fff;border-bottom:4px solid #365cf5}
+.resume.executive .executive-header>div,.resume.compact-header>div,.resume.mono-header>div{min-width:0;flex:1}
+.resume.executive .executive-header h2,.resume.executive .executive-header .subtitle{color:#fff}
+.resume.executive .executive-header .avatar{margin:0}
+.resume.executive .executive-header .contact{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:9px}
+.resume.executive .executive-header .contact p{margin:0}
+.resume.executive .executive-body{padding:8px 24px 24px}
+.resume.compact .compact-header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:22px 24px 8px}
+.resume.compact .compact-header .avatar{order:2;margin:0}
+.resume.compact .compact-contact{padding:0 24px 9px;border-bottom:2px solid #17243d}
+.resume.compact .compact-contact .contact{display:flex;flex-wrap:wrap;gap:4px 14px}
+.resume.compact .compact-contact .contact p{margin:0}
+.resume.compact .compact-body{padding:5px 24px 22px}
+.resume.compact h3{margin-top:12px}
+.resume.sidebar{display:block}.resume.sidebar .resume-inner{display:grid;grid-template-columns:68% 32%;min-height:100%}
+.resume.sidebar .sidebar-main{padding:28px 20px}
+.resume.sidebar .sidebar-side{background:#eef2f8;padding:24px 14px;overflow-wrap:anywhere}
+.resume.sidebar .sidebar-side .avatar{display:block;margin:0 auto 14px}
+.resume.timeline .timeline-header{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:24px 26px 12px;border-bottom:2px solid #365cf5}
+.resume.timeline .timeline-header .avatar{order:2;margin:0}
+.resume.timeline .timeline-body{padding:8px 26px 24px}
+.resume.timeline .timeline-body>h3{border:0;border-left:2px solid #365cf5;padding:2px 0 2px 8px;margin-top:15px}
+.resume.timeline .timeline-body .item{border-left:1px solid #cbd5e1;padding:0 0 4px 10px;margin-left:3px}
+.resume.monochrome .mono-header{display:flex;align-items:center;gap:16px;padding:24px 24px 16px;border-bottom:3px solid #273449;background:#f1f3f6}
+.resume.monochrome .mono-header .avatar{margin:0}
+.resume.monochrome .mono-header h2,.resume.monochrome .mono-header .subtitle{color:#273449}
+.resume.monochrome .mono-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);padding:8px 24px 22px;gap:18px}
+.resume.monochrome h3{color:#273449;border-color:#8792a1}
+.resume.monochrome .mono-side{border-left:1px solid #d1d5db;padding-left:14px;overflow-wrap:anywhere}
+@media(max-width:700px){.template-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:520px){.template-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.resume.sidebar .resume-inner,.resume.monochrome .mono-grid{grid-template-columns:66% 34%}}
+.mini-sidebar .mini-side{order:2}.mini-executive{display:block;position:relative;padding-top:20px}.mini-executive:before{content:'';position:absolute;inset:0 0 auto;height:20px;background:#1b2c49}.mini-compact .mini-lines{padding-top:2px}.mini-timeline .mini-lines{border-left:2px solid #365cf5;padding-left:5px}.mini-monochrome{background:#f1f3f6}
+
+/* Tighten spacing in the additional templates. */
+.resume.executive .executive-header{gap:14px;padding:18px 18px 14px}
+.resume.executive .executive-body{padding:2px 18px 16px}
+.resume.compact .compact-header{gap:12px;padding:15px 18px 5px}
+.resume.compact .compact-contact{padding:0 18px 6px}
+.resume.compact .compact-body{padding:2px 18px 16px}
+.resume.sidebar .sidebar-main{padding:20px 16px}
+.resume.sidebar .sidebar-side{padding:18px 12px}
+.resume.timeline .timeline-header{gap:12px;padding:16px 20px 8px}
+.resume.timeline .timeline-body{padding:2px 20px 16px}
+.resume.monochrome .mono-header{gap:12px;padding:16px 18px 12px}
+.resume.monochrome .mono-grid{padding:4px 18px 16px;gap:12px}
+.resume.executive h3,.resume.compact h3,.resume.sidebar h3,.resume.timeline h3,.resume.monochrome h3{margin:11px 0 5px;padding-bottom:4px}
+.resume.executive .item,.resume.compact .item,.resume.sidebar .item,.resume.timeline .item,.resume.monochrome .item{margin-bottom:6px}
+.resume.executive .contact p,.resume.compact .contact p{margin:2px 0}
+/* Keep Compact contact details beneath the identity and clear of the photo. */
+.resume.compact .compact-header{align-items:center;border-bottom:2px solid #17243d;padding:16px 18px 12px;gap:14px}
+.resume.compact .compact-header>div{min-width:0;flex:1 1 auto}
+.resume.compact .compact-header .avatar{order:2;flex:0 0 var(--photo-size,96px);width:var(--photo-size,96px);height:var(--photo-size,96px);margin:0}
+.resume.compact .compact-header .contact{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px 10px;margin-top:7px;min-width:0}
+.resume.compact .compact-header .contact-row{min-width:0;align-items:flex-start;overflow-wrap:anywhere}
+.resume.compact .compact-header .contact-row:nth-child(n+3){grid-column:1/-1}
+.resume.compact .compact-header .contact p{margin:0}
+.resume.compact .compact-body{padding:2px 18px 16px}
+.resume.compact .compact-header .contact{display:flex;flex-wrap:wrap;align-items:flex-start;gap:3px 12px}
+.resume.compact .compact-header .contact-row{flex:0 1 auto;max-width:100%}
+.resume.compact .compact-header .contact-row:nth-child(n+3){flex-basis:100%}
+
+/* Keep Timeline identity grouped and reduce vertical whitespace. */
+.resume.timeline .timeline-header{justify-content:flex-start;gap:14px;padding:12px 18px 8px}
+.resume.timeline .timeline-identity{flex:1;min-width:0}
+.resume.timeline .timeline-identity h2{margin-bottom:4px}
+.resume.timeline .timeline-identity .subtitle{margin-bottom:0}
+.resume.timeline .timeline-body{padding:0 18px 12px}
+.resume.timeline .timeline-body>h3{margin:9px 0 4px;padding-bottom:3px}
+.resume.timeline .timeline-body .item{margin-bottom:5px}
+/* Tighten Monochrome identity and body spacing. */
+.resume.monochrome .mono-header{padding:12px 18px 10px;gap:12px}
+.resume.monochrome .mono-header>div{display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.resume.monochrome .mono-header h2{margin:0;line-height:1.1}
+.resume.monochrome .mono-header .subtitle{margin:0;line-height:1.25}
+.resume.monochrome .mono-grid{padding:2px 18px 12px;gap:10px}
+.resume.monochrome h3{margin:8px 0 4px;padding-bottom:3px}
+.resume.monochrome .item{margin-bottom:5px}
