@@ -81,6 +81,23 @@
   function textLines(value) {
     return escapeHTML(value).split("\n").map(line=>`<p>${line || "&nbsp;"}</p>`).join("");
   }
+  function descriptionMarkup(value) {
+    let html="",listType="";
+    const closeList=()=>{if(listType){html+=`</${listType}>`;listType="";}};
+    String(value||"").split("\n").forEach(line=>{
+      const numbered=line.match(/^\s*\d+[.)]\s*(.*)$/);
+      const bullet=line.match(/^\s*(?:•|[-–*])\s*(.*)$/);
+      const match=numbered||bullet;
+      if(match){
+        const nextType=numbered?"ol":"ul";
+        if(listType!==nextType){closeList();listType=nextType;html+=`<${listType}>`;}
+        html+=`<li>${escapeHTML(match[1])||"&nbsp;"}</li>`;
+      }else{
+        closeList();html+=`<p>${line?escapeHTML(line):"&nbsp;"}</p>`;
+      }
+    });
+    closeList();return html;
+  }
   function section(title, content) { return `<h3>${title}</h3>${content}`; }
   function contactIcon(type) {
     const shapes={
@@ -122,7 +139,7 @@
           <div class="field"><label>Start year</label><input data-experience="${index}" data-part="startYear" value="${escapeHTML(job.startYear)}" placeholder="2023"></div></div>
           <div class="field-pair"><div class="field"><label>End month</label><input data-experience="${index}" data-part="endMonth" value="${escapeHTML(job.endMonth)}" placeholder="Month or Present"></div>
           <div class="field"><label>End year</label><input data-experience="${index}" data-part="endYear" value="${escapeHTML(job.endYear)}" placeholder="Year or Present"></div></div>
-          <div class="field wide"><label>Description</label><textarea data-experience="${index}" data-part="description" rows="3" placeholder="Describe your responsibilities and achievements.">${escapeHTML(job.description)}</textarea></div></div>
+          <div class="field wide"><label>Description</label><div class="description-tools" role="toolbar" aria-label="Description formatting"><button type="button" class="description-tool-button" data-format-kind="experience" data-format-index="${index}" data-format-style="bullet">• Bullets</button><button type="button" class="description-tool-button" data-format-kind="experience" data-format-index="${index}" data-format-style="numbered">1. Numbered</button><button type="button" class="description-tool-button" data-format-kind="experience" data-format-index="${index}" data-format-style="dash">– Dashes</button><button type="button" class="description-tool-button" data-format-kind="experience" data-format-index="${index}" data-format-style="clear">Clear</button></div><textarea data-experience="${index}" data-part="description" rows="3" placeholder="Describe your responsibilities and achievements.">${escapeHTML(job.description)}</textarea></div></div>
         </section>`).join("")}</div><button type="button" class="btn btn-light add-entry" id="addExperience">+ Add experience</button>`;
     }
     if(state.step===2) {
@@ -132,7 +149,7 @@
           <div class="field"><label>School name</label><input data-education="${index}" data-part="school" value="${escapeHTML(edu.school)}" placeholder="School name"></div>
           <div class="field"><label>Start year</label><input data-education="${index}" data-part="start" value="${escapeHTML(edu.start)}" placeholder="Year"></div>
           <div class="field"><label>End year</label><input data-education="${index}" data-part="end" value="${escapeHTML(edu.end)}" placeholder="Year"></div>
-          <div class="field wide"><div class="title-label-row"><label>Description</label><button type="button" class="none-toggle ${edu.descriptionNone?"active":""}" data-description-none="${index}" aria-pressed="${edu.descriptionNone}">${edu.descriptionNone?"Add Description":"None"}</button></div><textarea data-education="${index}" data-part="description" rows="3" placeholder="Relevant coursework, honors, or achievements." ${edu.descriptionNone?"disabled":""}>${escapeHTML(edu.description)}</textarea></div></div>
+          <div class="field wide"><div class="title-label-row"><label>Description</label><button type="button" class="none-toggle ${edu.descriptionNone?"active":""}" data-description-none="${index}" aria-pressed="${edu.descriptionNone}">${edu.descriptionNone?"Add Description":"None"}</button></div><div class="description-tools" role="toolbar" aria-label="Description formatting"><button type="button" class="description-tool-button" data-format-kind="education" data-format-index="${index}" data-format-style="bullet" ${edu.descriptionNone?"disabled":""}>• Bullets</button><button type="button" class="description-tool-button" data-format-kind="education" data-format-index="${index}" data-format-style="numbered" ${edu.descriptionNone?"disabled":""}>1. Numbered</button><button type="button" class="description-tool-button" data-format-kind="education" data-format-index="${index}" data-format-style="dash" ${edu.descriptionNone?"disabled":""}>– Dashes</button><button type="button" class="description-tool-button" data-format-kind="education" data-format-index="${index}" data-format-style="clear" ${edu.descriptionNone?"disabled":""}>Clear</button></div><textarea data-education="${index}" data-part="description" rows="3" placeholder="Relevant coursework, honors, or achievements." ${edu.descriptionNone?"disabled":""}>${escapeHTML(edu.description)}</textarea></div></div>
         </section>`).join("")}</div><button type="button" class="btn btn-light add-entry" id="addEducation">+ Add education</button>`;
     }
     if(state.step===3) {
@@ -163,6 +180,55 @@
     $("addProject")?.addEventListener("click",()=>{state.projects.push({name:"",context:"",year:"",description:""});renderPreview();renderForm();});
     $("fields").querySelectorAll("[data-experience]").forEach(el=>el.addEventListener("input",()=>{
       state.experience[Number(el.dataset.experience)][el.dataset.part]=el.value;renderPreview();
+    }));
+    $("fields").querySelectorAll("[data-format-style]").forEach(button=>button.addEventListener("click",()=>{
+      const index=Number(button.dataset.formatIndex),kind=button.dataset.formatKind;
+      const selector=kind==="experience"?`[data-experience="${index}"][data-part="description"]`:`[data-education="${index}"][data-part="description"]`;
+      const textarea=$("fields").querySelector(selector);
+      if(!textarea||textarea.disabled)return;
+      const value=textarea.value,start=textarea.selectionStart,end=textarea.selectionEnd;
+      const lineStart=value.lastIndexOf("\n",start-1)+1;
+      const endPosition=end>start&&value[end-1]==="\n"?end-1:end;
+      const nextBreak=value.indexOf("\n",endPosition);
+      const lineEnd=nextBreak<0?value.length:nextBreak;
+      const selectedLines=value.slice(lineStart,lineEnd).split("\n");
+      const style=button.dataset.formatStyle;
+      const formatted=selectedLines.map((line,lineIndex)=>{
+        const content=line.replace(/^\s*(?:(?:•|[-–*])|\d+[.)])\s*/,"");
+        if(style==="bullet")return content?`• ${content}`:"• ";
+        if(style==="numbered")return `${lineIndex+1}. ${content}`;
+        if(style==="dash")return content?`– ${content}`:"– ";
+        return content;
+      }).join("\n");
+      textarea.value=value.slice(0,lineStart)+formatted+value.slice(lineEnd);
+      textarea.dispatchEvent(new Event("input",{bubbles:true}));
+      textarea.focus();textarea.setSelectionRange(lineStart,lineStart+formatted.length);
+    }));
+    $("fields").querySelectorAll('[data-part="description"][data-experience], [data-part="description"][data-education]').forEach(textarea=>textarea.addEventListener("keydown",event=>{
+      if(event.key!=="Enter"||textarea.selectionStart!==textarea.selectionEnd)return;
+      const value=textarea.value,caret=textarea.selectionStart;
+      const lineStart=value.lastIndexOf("\n",caret-1)+1;
+      const lineEndIndex=value.indexOf("\n",caret);
+      const lineEnd=lineEndIndex<0?value.length:lineEndIndex;
+      const line=value.slice(lineStart,lineEnd);
+      const unordered=line.match(/^(\s*)([•*]|[-–])(\s+)/);
+      const ordered=line.match(/^(\s*)(\d+)([.)])(\s+)/);
+      const marker=unordered||ordered;
+      if(!marker)return;
+      const prefix=marker[0];
+      if(!line.slice(prefix.length).trim()){
+        event.preventDefault();
+        textarea.value=value.slice(0,lineStart)+line.slice(prefix.length)+value.slice(lineEnd);
+        textarea.setSelectionRange(lineStart,lineStart);
+      }else{
+        event.preventDefault();
+        const nextPrefix=ordered?`${ordered[1]}${Number(ordered[2])+1}${ordered[3]}${ordered[4]}`:prefix;
+        const insertion=`\n${nextPrefix}`;
+        textarea.value=value.slice(0,caret)+insertion+value.slice(caret);
+        const nextCaret=caret+insertion.length;
+        textarea.setSelectionRange(nextCaret,nextCaret);
+      }
+      textarea.dispatchEvent(new Event("input",{bubbles:true}));
     }));
     $("fields").querySelectorAll("[data-move-experience]").forEach(button=>button.addEventListener("click",()=>{
       const index=Number(button.dataset.moveExperience);
@@ -291,8 +357,9 @@
       const endYear=endIsPresent?"":job.endYear.trim()||(example?"Present":"");
       const dates=[ [startMonth,startYear].filter(Boolean).join(" "), endIsPresent?"Present":[endMonth,endYear].filter(Boolean).join(" ") ].filter(Boolean).join(" – ");
       const description=job.description.trim()||(example?"Describe your responsibilities and achievements. Add measurable results where possible.":"");
-      const lines=[title,dates,description].filter(Boolean);
-      return lines.length?`<div class="item">${textLines(lines.join("\n"))}</div>`:"";
+      const details=[title,dates].filter(Boolean);
+      const content=textLines(details.join("\n"))+(description?descriptionMarkup(description):"");
+      return content?`<div class="item">${content}</div>`:"";
     }).join("");
     const exp=section("Work experience",expContent);
     const eduContent=state.education.map(item=>{
@@ -300,8 +367,9 @@
       const title=[item.degreeNone?"":item.degree.trim()||(example?"Degree or Qualification":""),item.school.trim()||(example?"School Name":"")].filter(Boolean).join(" | ");
       const years=[item.start.trim()||(example?"2016":""),item.end.trim()||(example?"2020":"")].filter(Boolean).join(" – ");
       const description=item.descriptionNone?"":item.description.trim()||(example&&!item.descriptionTouched?"Relevant coursework, honors, or achievements.":"");
-      const lines=[title,years,description].filter(Boolean);
-      return lines.length?`<div class="item">${textLines(lines.join("\n"))}</div>`:"";
+      const details=[title,years].filter(Boolean);
+      const content=textLines(details.join("\n"))+(description?descriptionMarkup(description):"");
+      return content?`<div class="item">${content}</div>`:"";
     }).join("");
     const edu=section(state.template==="No Experience"?"Educational background":"Education",eduContent);
     const skills=section("Skills",listItems(state.skills.map((value,index)=>value.trim()||skillExamples[index]||"").filter(Boolean).join("\n")));
@@ -315,16 +383,16 @@
     }).filter(Boolean);
     const referencesSection=renderedReferences.length?`<h3 class="professional-references-heading">${renderedReferences.length===1?"Professional Reference":"Professional References"}</h3>${renderedReferences.join("")}`:"";
     let html="";
-    if(state.template==="Modern") html=`<aside class="side">${photo}${section("Contact",contact)}${skills}${languages}</aside><div class="main">${header}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${referencesSection}</div>`;
+    if(state.template==="Modern") html=`<aside class="side">${photo}${section("Contact",contact)}${skills}${languages}${referencesSection}</aside><div class="main">${header}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}</div>`;
     if(state.template==="Classic") html=`<div class="main"><div class="classic-header"><div class="classic-identity">${header}</div></div>${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}${referencesSection}</div>`;
     if(state.template==="Minimal") html=`<div class="main"><div class="minimal-header"><div class="minimal-identity">${header}</div>${photo}</div>${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}${referencesSection}</div>`;
     if(state.template==="Elegant") html=`<div class="hero">${photo}<div>${header}</div></div><div class="body">${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}${referencesSection}</div>`;
     if(state.template==="Professional") html=`<div class="hero">${photo}<div>${header}${contact}</div></div><div class="body">${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}${referencesSection}</div>`;
     if(state.template==="Executive") html=`<div class="executive-header">${photo}<div>${header}${contact}</div></div><div class="executive-body">${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}${referencesSection}</div>`;
     if(state.template==="Compact") html=`<div class="compact-header"><div>${header}${contact}</div>${photo}</div><div class="compact-body">${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}${referencesSection}</div>`;
-    if(state.template==="Sidebar") html=`<div class="sidebar-main">${header}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${referencesSection}</div><aside class="sidebar-side">${photo}${section("Contact",contact)}${skills}${languages}</aside>`;
+    if(state.template==="Sidebar") html=`<div class="sidebar-main">${header}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}</div><aside class="sidebar-side">${photo}${section("Contact",contact)}${skills}${languages}${referencesSection}</aside>`;
     if(state.template==="Timeline") html=`<div class="timeline-header"><div class="timeline-identity">${header}</div>${photo}</div><div class="timeline-body">${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}${referencesSection}</div>`;
-    if(state.template==="Monochrome") html=`<div class="mono-header">${photo}<div>${header}</div></div><div class="mono-grid"><div class="mono-main">${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${referencesSection}</div><aside class="mono-side">${section("Contact",contact)}${skills}${languages}</aside></div>`;
+    if(state.template==="Monochrome") html=`<div class="mono-header">${photo}<div>${header}</div></div><div class="mono-grid"><div class="mono-main">${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}</div><aside class="mono-side">${section("Contact",contact)}${skills}${languages}${referencesSection}</aside></div>`;
     if(state.template==="No Experience") { const detailRows=[["Nickname",v.nickname],["Age",v.age],["Sex",v.sex],["Birthday",v.birthday],["Birthplace",v.birthplace],["Father's name",v.fatherName],["Mother's name",v.motherName],["Civil status",v.civilStatus],["Nationality",v.nationality],["Religion",v.religion]].filter(([,value])=>value.trim()).map(([label,value])=>`<p class="noexp-detail"><strong>${label}</strong><span>${escapeHTML(value)}</span></p>`).join(""); const projectItems=state.projects.map(project=>{const parts=[project.name.trim(),project.context.trim(),project.year.trim(),project.description.trim()].filter(Boolean);return parts.length?`<div class="item">${textLines(parts.join("\n"))}</div>`:"";}).join(""); const expNote=v.experienceNote.trim()||"No formal work experience yet. Willing to learn and contribute."; const strengthItems=listItems(v.strengths.trim()||"Willingness to learn\nCommunication\nTeamwork"); html=`<aside class="noexp-side">${photo}${section("Contact",contact)}${detailRows?section("Personal information",detailRows):""}${skills}${section("Strengths",strengthItems)}${languages}</aside><div class="noexp-main">${header}${section(state.summaryHeading,textLines(summaryText))}${edu}${section("Experience",textLines(expNote))}${projectItems?section("Projects & activities",projectItems):""}${referencesSection}</div>`; }
     $("resumePreview").className=`resume ${state.template.toLowerCase().replace(/\s+/g,"-")}`;
     setMobilePreviewGeometry($("resumePreview"));

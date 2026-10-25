@@ -153,6 +153,13 @@ body[data-theme="dark"] .photo-shape-button[aria-pressed="true"]{background:#223
 .experience-move-button:hover:not(:disabled){border-color:var(--blue);color:var(--blue)}
 .experience-move-button:disabled{opacity:.4;cursor:default}
 .experience-move-button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.description-tools{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 6px}
+.description-tool-button{border:1px solid var(--line);border-radius:6px;padding:5px 8px;background:var(--white);color:var(--ink);font:inherit;font-size:10px;line-height:1.2;cursor:pointer}
+.description-tool-button:hover:not(:disabled){border-color:var(--blue);color:var(--blue)}
+.description-tool-button:disabled{opacity:.45;cursor:default}
+.description-tool-button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+#resumePreview .item ul,#resumePreview .item ol{margin:0 0 3px;padding-left:16px}
+#resumePreview .item li{margin:0 0 2px;line-height:1.35}
 
 /* Additional resume templates. */
 .resume.executive,.resume.compact,.resume.timeline,.resume.monochrome{display:block;padding:0}
@@ -260,5 +267,8 @@ body[data-theme="dark"] .photo-shape-button[aria-pressed="true"]{background:#223
 .professional-reference ul{margin:0;padding-left:18px}
 .professional-reference li{margin:0;padding-left:1px;line-height:1.35}
 .professional-reference li:last-child{margin-bottom:0}
+.resume.modern .side .professional-references-heading,.resume.sidebar .sidebar-side .professional-references-heading,.resume.monochrome .mono-side .professional-references-heading{font-size:8px;margin-top:10px}
+.resume.modern .side .professional-reference,.resume.sidebar .sidebar-side .professional-reference,.resume.monochrome .mono-side .professional-reference{font-size:7px;overflow-wrap:anywhere}
+.resume.modern .side .professional-reference ul,.resume.sidebar .sidebar-side .professional-reference ul,.resume.monochrome .mono-side .professional-reference ul{padding-left:12px}
 .reference-card .field-grid{row-gap:10px}
 .editor{scroll-margin-top:84px}
