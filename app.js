@@ -29,7 +29,7 @@
   const templates = ["Modern","Classic","Professional","Elegant","Minimal","Executive","Compact","Sidebar","Timeline","Monochrome","No Experience"];
   const skillExamples=["Communication","Problem Solving","Project Management","Microsoft Office"];
   const languageExamples=["English","Spanish"];
-  const state = {step:0, template:"Modern", photo:"", photoSize:120, photoShape:"circle", titleDisabled:false, summaryHeading:"Profile", experience:[{job:"",company:"",startMonth:"",startYear:"",endMonth:"",endYear:"",description:""}],education:[{degree:"",degreeNone:false,school:"",start:"",end:"",description:"",descriptionNone:false,descriptionTouched:false}],skills:["","","",""],languages:["",""],projects:[],references:[],values:{}};
+  const state = {step:0, template:"Modern", photo:"", photoSize:120, photoShape:"circle", titleDisabled:false, summaryHeading:"Profile", experience:[{job:"",company:"",startMonth:"",startYear:"",endMonth:"",endYear:"",description:"",isExample:true}],education:[{degree:"",degreeNone:false,school:"",start:"",end:"",description:"",descriptionNone:false,descriptionTouched:false,isExample:true}],skills:["","","",""],languages:["",""],projects:[],references:[],values:{}};
   const photoUpload = document.querySelector(".photo-upload");
   const photoUploadHome = photoUpload.parentElement;
   const photoSizeSelect = document.createElement("select");
@@ -115,7 +115,7 @@
       $("fields").innerHTML=`<h3 class="form-section-title">Experience</h3><div class="field wide noexp-experience-note"><label for="experienceNote">Experience note</label><textarea id="experienceNote" data-key="experienceNote" rows="2" placeholder="${escapeHTML(state.values.experienceNote)}"></textarea><small>Use this space to describe your availability or transferable experience.</small></div><h4 class="noexp-subheading">Projects &amp; activities</h4><div class="experience-list">${state.projects.map((project,index)=>`<section class="entry-card"><div class="entry-heading"><strong>Project ${index+1}</strong>${state.projects.length>1?`<button type="button" class="text-button" data-remove-project="${index}">Remove</button>`:""}</div><div class="field-grid"><div class="field"><label>Project or activity</label><input data-project="${index}" data-part="name" value="${escapeHTML(project.name)}" placeholder="Academic or personal project"></div><div class="field"><label>Organization or course</label><input data-project="${index}" data-part="context" value="${escapeHTML(project.context)}" placeholder="School, course, or organization"></div><div class="field"><label>Year</label><input data-project="${index}" data-part="year" value="${escapeHTML(project.year)}" placeholder="Year"></div><div class="field wide"><label>Description</label><textarea data-project="${index}" data-part="description" rows="3" placeholder="Describe what you created, contributed, or learned.">${escapeHTML(project.description)}</textarea></div></div></section>`).join("")}</div><button type="button" class="btn btn-light add-entry" id="addProject">+ Add project or activity</button>`;
     } else if(state.step===1) {
       $("fields").innerHTML=`<h3 class="form-section-title">Work experience</h3><div class="experience-list">${state.experience.map((job,index)=>`
-        <section class="entry-card"><div class="entry-heading"><strong>Experience ${index+1}</strong>${state.experience.length>1?`<button type="button" class="text-button" data-remove-experience="${index}">Remove</button>`:""}</div>
+        <section class="entry-card"><div class="entry-heading"><strong>Experience ${index+1}</strong><div class="entry-heading-actions"><button type="button" class="experience-move-button" data-move-experience="${index}" data-direction="-1" aria-label="Move experience ${index+1} up" title="Move up" ${index===0?"disabled":""}>&#8593;</button><button type="button" class="experience-move-button" data-move-experience="${index}" data-direction="1" aria-label="Move experience ${index+1} down" title="Move down" ${index===state.experience.length-1?"disabled":""}>&#8595;</button>${state.experience.length>1?`<button type="button" class="text-button" data-remove-experience="${index}">Remove</button>`:""}</div></div>
           <div class="field-grid"><div class="field"><label>Job title</label><input data-experience="${index}" data-part="job" value="${escapeHTML(job.job)}" placeholder="Job Title"></div>
           <div class="field"><label>Company name</label><input data-experience="${index}" data-part="company" value="${escapeHTML(job.company)}" placeholder="Company Name"></div>
           <div class="field-pair"><div class="field"><label>Start month</label><input data-experience="${index}" data-part="startMonth" value="${escapeHTML(job.startMonth)}" placeholder="Jan"></div>
@@ -127,7 +127,7 @@
     }
     if(state.step===2) {
       $("fields").innerHTML=`<h3 class="form-section-title">Education</h3><div class="education-list">${state.education.map((edu,index)=>`
-        <section class="entry-card"><div class="entry-heading"><strong>Education ${index+1}</strong>${state.education.length>1?`<button type="button" class="text-button" data-remove-education="${index}">Remove</button>`:""}</div>
+        <section class="entry-card"><div class="entry-heading"><strong>Education ${index+1}</strong><div class="entry-heading-actions"><button type="button" class="experience-move-button" data-move-education="${index}" data-direction="-1" aria-label="Move education ${index+1} up" title="Move up" ${index===0?"disabled":""}>&#8593;</button><button type="button" class="experience-move-button" data-move-education="${index}" data-direction="1" aria-label="Move education ${index+1} down" title="Move down" ${index===state.education.length-1?"disabled":""}>&#8595;</button>${state.education.length>1?`<button type="button" class="text-button" data-remove-education="${index}">Remove</button>`:""}</div></div>
           <div class="field-grid"><div class="field"><div class="title-label-row"><label>Degree or qualification</label><button type="button" class="none-toggle ${edu.degreeNone?"active":""}" data-degree-none="${index}" aria-pressed="${edu.degreeNone}">${edu.degreeNone?"Add":"None"}</button></div><input data-education="${index}" data-part="degree" value="${escapeHTML(edu.degree)}" placeholder="Degree or qualification" ${edu.degreeNone?"disabled":""}></div>
           <div class="field"><label>School name</label><input data-education="${index}" data-part="school" value="${escapeHTML(edu.school)}" placeholder="School name"></div>
           <div class="field"><label>Start year</label><input data-education="${index}" data-part="start" value="${escapeHTML(edu.start)}" placeholder="Year"></div>
@@ -164,6 +164,13 @@
     $("fields").querySelectorAll("[data-experience]").forEach(el=>el.addEventListener("input",()=>{
       state.experience[Number(el.dataset.experience)][el.dataset.part]=el.value;renderPreview();
     }));
+    $("fields").querySelectorAll("[data-move-experience]").forEach(button=>button.addEventListener("click",()=>{
+      const index=Number(button.dataset.moveExperience);
+      const target=index+Number(button.dataset.direction);
+      if(target<0||target>=state.experience.length)return;
+      [state.experience[index],state.experience[target]]=[state.experience[target],state.experience[index]];
+      renderPreview();renderForm();
+    }));
     $("fields").querySelectorAll("[data-remove-experience]").forEach(button=>button.addEventListener("click",()=>{
       state.experience.splice(Number(button.dataset.removeExperience),1);renderPreview();renderForm();
     }));
@@ -183,6 +190,13 @@
     $("fields").querySelectorAll("[data-description-none]").forEach(button=>button.addEventListener("click",()=>{
       const edu=state.education[Number(button.dataset.descriptionNone)];edu.descriptionNone=!edu.descriptionNone;
       if(edu.descriptionNone) edu.description="";
+      renderPreview();renderForm();
+    }));
+    $("fields").querySelectorAll("[data-move-education]").forEach(button=>button.addEventListener("click",()=>{
+      const index=Number(button.dataset.moveEducation);
+      const target=index+Number(button.dataset.direction);
+      if(target<0||target>=state.education.length)return;
+      [state.education[index],state.education[target]]=[state.education[target],state.education[index]];
       renderPreview();renderForm();
     }));
     $("fields").querySelectorAll("[data-remove-education]").forEach(button=>button.addEventListener("click",()=>{
@@ -268,7 +282,7 @@
     const contactRow=(type,value)=>`<p class="contact-row">${contactIcon(type)}<span>${escapeHTML(value)}</span></p>`;
     const contact=`<div class="contact">${contactRow("email",v.email.trim()||"you@example.com")}${contactRow("phone",v.phone.trim()||"+63 9123456789")}${contactRow("location",v.location.trim()||"House Number, Street, Barangay, Municipality / City, Province, Country, Zip Code")}${v.website.trim()?contactRow("website",v.website):""}</div>`;
     const expContent=state.experience.map((job,index)=>{
-      const example=index===0||job.isNew;
+      const example=job.isExample||job.isNew;
       const title=[job.job.trim()||(example?"Job Title":""),job.company.trim()||(example?"Company Name":"")].filter(Boolean).join(" | ");
       const startMonth=job.startMonth.trim()||(example?"Jan":"");
       const startYear=job.startYear.trim()||(example?"2023":"");
@@ -282,7 +296,7 @@
     }).join("");
     const exp=section("Work experience",expContent);
     const eduContent=state.education.map(item=>{
-      const example=state.education.indexOf(item)===0||item.isNew;
+      const example=item.isExample||item.isNew;
       const title=[item.degreeNone?"":item.degree.trim()||(example?"Degree or Qualification":""),item.school.trim()||(example?"School Name":"")].filter(Boolean).join(" | ");
       const years=[item.start.trim()||(example?"2016":""),item.end.trim()||(example?"2020":"")].filter(Boolean).join(" – ");
       const description=item.descriptionNone?"":item.description.trim()||(example&&!item.descriptionTouched?"Relevant coursework, honors, or achievements.":"");

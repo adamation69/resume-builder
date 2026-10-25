@@ -148,6 +148,12 @@ body[data-theme="dark"] .photo-shape-button[aria-pressed="true"]{background:#223
 
 .entry-card [data-degree-none]{flex:0 0 auto;padding:4px 8px;white-space:nowrap;line-height:1.2}
 
+.entry-heading-actions{display:flex;align-items:center;gap:7px}
+.experience-move-button{display:inline-grid;place-items:center;width:25px;height:25px;padding:0;border:1px solid var(--line);border-radius:6px;background:var(--white);color:var(--ink);font:inherit;font-size:15px;line-height:1;cursor:pointer}
+.experience-move-button:hover:not(:disabled){border-color:var(--blue);color:var(--blue)}
+.experience-move-button:disabled{opacity:.4;cursor:default}
+.experience-move-button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
 /* Additional resume templates. */
 .resume.executive,.resume.compact,.resume.timeline,.resume.monochrome{display:block;padding:0}
 .resume.executive .executive-header{display:flex;align-items:center;gap:18px;padding:26px 24px;background:#1b2c49;color:#fff;border-bottom:4px solid #365cf5}
