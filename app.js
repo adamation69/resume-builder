@@ -7,18 +7,29 @@
       {key:"email", label:"Email address", value:"", placeholder:"you@example.com"},
       {key:"phone", label:"Phone number", value:"", placeholder:"+63 9123456789"},
       {key:"location", label:"Complete Address", value:"", placeholder:"House Number, Street, Barangay, Municipality / City, Province, Country, Zip Code", wide:true},
-      {key:"summary", label:"Professional summary", value:"", placeholder:"Write a short introduction highlighting your experience, strengths, and career goals.", type:"textarea", wide:true}
+      {key:"age", label:"Age (optional)", value:"", placeholder:"e.g. 20", noExperienceOnly:true},
+      {key:"nationality", label:"Nationality (optional)", value:"", placeholder:"e.g. Filipino", noExperienceOnly:true},
+      {key:"nickname", label:"Nickname (optional)", value:"", placeholder:"e.g. Ria", noExperienceOnly:true},
+      {key:"sex", label:"Sex (optional)", value:"", placeholder:"Optional", noExperienceOnly:true},
+      {key:"birthday", label:"Birthday (optional)", value:"", placeholder:"e.g. January 1, 2005", noExperienceOnly:true},
+      {key:"birthplace", label:"Birthplace (optional)", value:"", placeholder:"City or municipality", noExperienceOnly:true},
+      {key:"fatherName", label:"Father's name (optional)", value:"", placeholder:"Full name", noExperienceOnly:true},
+      {key:"motherName", label:"Mother's name (optional)", value:"", placeholder:"Full name", noExperienceOnly:true},
+      {key:"civilStatus", label:"Civil status (optional)", value:"", placeholder:"Optional", noExperienceOnly:true},
+      {key:"religion", label:"Religion (optional)", value:"", placeholder:"Optional", noExperienceOnly:true},
+      {key:"summary", label:"Professional summary", value:"", placeholder:"Write a short introduction highlighting your experience, strengths, and career goals.", type:"textarea", wide:true},
     ]},
-    { title: "Work experience", fields: []},
+    { title: "Work experience", fields: [{key:"experienceNote",label:"Experience note",value:"",placeholder:"No formal work experience yet. Willing to learn and contribute.",type:"textarea",wide:true,noExperienceOnly:true}]},
     { title: "Education", fields: []},
     { title: "Skills & languages", fields: [
+      {key:"strengths", label:"Strengths (optional)", value:"", placeholder:"Willingness to learn, communication, teamwork", type:"textarea", wide:true, noExperienceOnly:true},
       {key:"website", label:"Website / LinkedIn (optional)", value:"", placeholder:"linkedin.com/in/yourname", wide:true}
     ]}
   ];
-  const templates = ["Modern","Classic","Professional","Elegant","Minimal","Executive","Compact","Sidebar","Timeline","Monochrome"];
+  const templates = ["Modern","Classic","Professional","Elegant","Minimal","Executive","Compact","Sidebar","Timeline","Monochrome","No Experience"];
   const skillExamples=["Communication","Problem Solving","Project Management","Microsoft Office"];
   const languageExamples=["English","Spanish"];
-  const state = {step:0, template:"Modern", photo:"", photoSize:120, photoShape:"circle", titleDisabled:false, summaryHeading:"Profile", experience:[{job:"",company:"",startMonth:"",startYear:"",endMonth:"",endYear:"",description:""}],education:[{degree:"",degreeNone:false,school:"",start:"",end:"",description:"",descriptionNone:false,descriptionTouched:false}],skills:["","","",""],languages:["",""],values:{}};
+  const state = {step:0, template:"Modern", photo:"", photoSize:120, photoShape:"circle", titleDisabled:false, summaryHeading:"Profile", experience:[{job:"",company:"",startMonth:"",startYear:"",endMonth:"",endYear:"",description:""}],education:[{degree:"",degreeNone:false,school:"",start:"",end:"",description:"",descriptionNone:false,descriptionTouched:false}],skills:["","","",""],languages:["",""],projects:[],references:[],values:{}};
   const photoUpload = document.querySelector(".photo-upload");
   const photoUploadHome = photoUpload.parentElement;
   const photoSizeSelect = document.createElement("select");
@@ -87,19 +98,22 @@
     const section = sections[state.step];
     photoUploadHome.append(photoUpload); photoUpload.hidden=state.step!==0;
     $("stepCount").textContent = `Step ${state.step+1} of ${sections.length}`;
-    $("fields").innerHTML = `<h3 class="form-section-title">${section.title}</h3><div class="field-grid">${section.fields.map(f=>f.key==="name"?`
+    document.querySelectorAll(".step")[1].querySelector("span").textContent=state.template==="No Experience"?"Experience":"Experience";
+    $("fields").innerHTML = `<h3 class="form-section-title">${section.title}</h3><div class="field-grid">${section.fields.filter(f=>!f.noExperienceOnly||state.template==="No Experience").map(f=>f.key==="name"?`
       <div class="name-photo-row wide"><div class="field name-field">
         <label for="field-${f.key}">${f.label}</label>
-        <input id="field-${f.key}" data-key="${f.key}" value="${escapeHTML(state.values[f.key])}" placeholder="${escapeHTML(f.placeholder||"")}">
+        <input id="field-${f.key}" data-key="${f.key}" value="${escapeHTML(state.values[f.key])}" placeholder="${escapeHTML(state.template==="No Experience"&&f.key==="summary"?"Describe your career goals, strengths, and what you hope to contribute.":state.template==="No Experience"&&f.key==="job"?"Target role or position":f.placeholder||"")}">
       </div><div class="photo-slot"></div></div>`:`
       <div class="field ${f.wide?"wide":""}">
         ${f.key==="job"?`<div class="title-label-row"><label for="field-${f.key}">${f.label}</label><button type="button" class="none-toggle ${state.titleDisabled?"active":""}" data-title-none aria-pressed="${state.titleDisabled}">${state.titleDisabled?"Add professional title":"None"}</button></div>`:`<label for="field-${f.key}">${f.label}</label>`}
-        ${f.key==="summary"?`<label class="summary-choice-label" for="summaryHeading">Summary heading in resume</label><select class="summary-heading-select" id="summaryHeading"><option value="Profile" ${state.summaryHeading==="Profile"?"selected":""}>Profile</option><option value="About Me" ${state.summaryHeading==="About Me"?"selected":""}>About Me</option></select>`:""}
+        ${f.key==="summary"?`<label class="summary-choice-label" for="summaryHeading">Summary heading in resume</label><select class="summary-heading-select" id="summaryHeading"><option value="Profile" ${state.summaryHeading==="Profile"?"selected":""}>Profile</option><option value="About Me" ${state.summaryHeading==="About Me"?"selected":""}>About Me</option>${state.template==="No Experience"?`<option value="Career Objective" ${state.summaryHeading==="Career Objective"?"selected":""}>Career Objective</option>`:""}</select>`:""}
         ${f.type==="textarea"
-          ? `<textarea id="field-${f.key}" data-key="${f.key}" rows="${f.key==="summary"?4:5}" placeholder="${escapeHTML(f.placeholder||"")}">${escapeHTML(state.values[f.key])}</textarea>`
-          : `<input id="field-${f.key}" data-key="${f.key}" value="${escapeHTML(state.values[f.key])}" placeholder="${escapeHTML(f.placeholder||"")}" ${f.key==="job"&&state.titleDisabled?"disabled":""}>`}
+          ? `<textarea id="field-${f.key}" data-key="${f.key}" rows="${f.key==="summary"?4:5}" placeholder="${escapeHTML(state.template==="No Experience"&&f.key==="summary"?"Describe your career goals, strengths, and what you hope to contribute.":state.template==="No Experience"&&f.key==="job"?"Target role or position":f.placeholder||"")}">${escapeHTML(state.values[f.key])}</textarea>`
+          : `<input id="field-${f.key}" data-key="${f.key}" value="${escapeHTML(state.values[f.key])}" placeholder="${escapeHTML(state.template==="No Experience"&&f.key==="summary"?"Describe your career goals, strengths, and what you hope to contribute.":state.template==="No Experience"&&f.key==="job"?"Target role or position":f.placeholder||"")}" ${f.key==="job"&&state.titleDisabled?"disabled":""}>`}
       </div>`).join("")}</div>`;
-    if(state.step===1) {
+    if(state.step===1 && state.template==="No Experience") {
+      $("fields").innerHTML=`<h3 class="form-section-title">Experience</h3><div class="field wide noexp-experience-note"><label for="experienceNote">Experience note</label><textarea id="experienceNote" data-key="experienceNote" rows="2" placeholder="${escapeHTML(state.values.experienceNote)}"></textarea><small>Use this space to describe your availability or transferable experience.</small></div><h4 class="noexp-subheading">Projects &amp; activities</h4><div class="experience-list">${state.projects.map((project,index)=>`<section class="entry-card"><div class="entry-heading"><strong>Project ${index+1}</strong>${state.projects.length>1?`<button type="button" class="text-button" data-remove-project="${index}">Remove</button>`:""}</div><div class="field-grid"><div class="field"><label>Project or activity</label><input data-project="${index}" data-part="name" value="${escapeHTML(project.name)}" placeholder="Academic or personal project"></div><div class="field"><label>Organization or course</label><input data-project="${index}" data-part="context" value="${escapeHTML(project.context)}" placeholder="School, course, or organization"></div><div class="field"><label>Year</label><input data-project="${index}" data-part="year" value="${escapeHTML(project.year)}" placeholder="Year"></div><div class="field wide"><label>Description</label><textarea data-project="${index}" data-part="description" rows="3" placeholder="Describe what you created, contributed, or learned.">${escapeHTML(project.description)}</textarea></div></div></section>`).join("")}</div><button type="button" class="btn btn-light add-entry" id="addProject">+ Add project or activity</button>`;
+    } else if(state.step===1) {
       $("fields").innerHTML=`<h3 class="form-section-title">Work experience</h3><div class="experience-list">${state.experience.map((job,index)=>`
         <section class="entry-card"><div class="entry-heading"><strong>Experience ${index+1}</strong>${state.experience.length>1?`<button type="button" class="text-button" data-remove-experience="${index}">Remove</button>`:""}</div>
           <div class="field-grid"><div class="field"><label>Job title</label><input data-experience="${index}" data-part="job" value="${escapeHTML(job.job)}" placeholder="Job Title"></div>
@@ -123,6 +137,7 @@
     }
     if(state.step===3) {
       $("fields").innerHTML=`<h3 class="form-section-title">Skills &amp; languages</h3><div class="repeat-section"><h4>Skills</h4><div class="repeat-list">${state.skills.map((value,index)=>`<div class="repeat-row"><input data-skill="${index}" value="${escapeHTML(value)}" placeholder="${skillExamples[index]||"Skill"}"><button type="button" class="text-button" data-remove-skill="${index}" aria-label="Remove skill">Remove</button></div>`).join("")}</div><button type="button" class="btn btn-light add-entry" id="addSkill">+ Add skill</button></div><div class="repeat-section"><h4>Languages</h4><div class="repeat-list">${state.languages.map((value,index)=>`<div class="repeat-row"><input data-language="${index}" value="${escapeHTML(value)}" placeholder="${languageExamples[index]||"Language"}"><button type="button" class="text-button" data-remove-language="${index}" aria-label="Remove language">Remove</button></div>`).join("")}</div><button type="button" class="btn btn-light add-entry" id="addLanguage">+ Add language</button></div><div class="field wide website-field"><label for="field-website">Website / LinkedIn (optional)</label><input id="field-website" data-key="website" value="${escapeHTML(state.values.website)}" placeholder="linkedin.com/in/yourname"></div>`;
+      $("fields").insertAdjacentHTML("beforeend",`<div class="repeat-section reference-form"><h4>${state.references.length===1?"Professional Reference":"Professional References"}</h4><div class="reference-list">${state.references.map((reference,index)=>`<section class="entry-card reference-card"><div class="entry-heading"><strong>Reference ${index+1}</strong><button type="button" class="text-button" data-remove-reference="${index}">Remove</button></div><div class="field-grid"><div class="field"><label>Name</label><input data-reference="${index}" data-part="name" value="${escapeHTML(reference.name)}" placeholder="Full name"></div><div class="field"><label>Relationship</label><input data-reference="${index}" data-part="relationship" value="${escapeHTML(reference.relationship)}" placeholder="e.g. Former supervisor"></div><div class="field"><label>Title</label><input data-reference="${index}" data-part="title" value="${escapeHTML(reference.title)}" placeholder="e.g. Senior Manager"></div><div class="field"><label>Company</label><input data-reference="${index}" data-part="company" value="${escapeHTML(reference.company)}" placeholder="Company name"></div><div class="field"><label>Phone number</label><input data-reference="${index}" data-part="phone" value="${escapeHTML(reference.phone)}" placeholder="Phone number"></div><div class="field"><label>Email</label><input type="email" data-reference="${index}" data-part="email" value="${escapeHTML(reference.email)}" placeholder="Email address"></div></div></section>`).join("")}</div><button type="button" class="btn btn-light add-entry" id="addReference">+ Add reference</button></div>`);
     }
     if(state.step===0) $("fields").querySelector(".photo-slot").append(photoUpload);
     document.querySelectorAll(".step").forEach((b,i)=>b.classList.toggle("active",i===state.step));
@@ -140,6 +155,12 @@
       if(state.titleDisabled) state.values.job="";renderPreview();
       renderForm();
     });
+    $("fields").querySelectorAll("[data-reference]").forEach(el=>el.addEventListener("input",()=>{state.references[Number(el.dataset.reference)][el.dataset.part]=el.value;renderPreview();}));
+    $("fields").querySelectorAll("[data-remove-reference]").forEach(button=>button.addEventListener("click",()=>{state.references.splice(Number(button.dataset.removeReference),1);renderForm();renderPreview();}));
+    $("addReference")?.addEventListener("click",()=>{state.references.push({name:"",relationship:"",title:"",company:"",phone:"",email:""});renderForm();});
+    $("fields").querySelectorAll("[data-project]").forEach(el=>el.addEventListener("input",()=>{state.projects[Number(el.dataset.project)][el.dataset.part]=el.value;renderPreview();}));
+    $("fields").querySelectorAll("[data-remove-project]").forEach(button=>button.addEventListener("click",()=>{state.projects.splice(Number(button.dataset.removeProject),1);renderPreview();renderForm();}));
+    $("addProject")?.addEventListener("click",()=>{state.projects.push({name:"",context:"",year:"",description:""});renderPreview();renderForm();});
     $("fields").querySelectorAll("[data-experience]").forEach(el=>el.addEventListener("input",()=>{
       state.experience[Number(el.dataset.experience)][el.dataset.part]=el.value;renderPreview();
     }));
@@ -268,23 +289,30 @@
       const lines=[title,years,description].filter(Boolean);
       return lines.length?`<div class="item">${textLines(lines.join("\n"))}</div>`:"";
     }).join("");
-    const edu=section("Education",eduContent);
+    const edu=section(state.template==="No Experience"?"Educational background":"Education",eduContent);
     const skills=section("Skills",listItems(state.skills.map((value,index)=>value.trim()||skillExamples[index]||"").filter(Boolean).join("\n")));
     const languages=section("Languages",listItems(state.languages.map((value,index)=>value.trim()||languageExamples[index]||"").filter(Boolean).join("\n")));
-    const summaryText=v.summary.trim()||"Write a short introduction highlighting your experience, strengths, and career goals.";
+    const summaryText=v.summary.trim()||(state.template==="No Experience"?"Motivated student or recent graduate eager to apply my strengths, learn quickly, and contribute to a team.":"Write a short introduction highlighting your experience, strengths, and career goals.");
     const header=`<h2>${escapeHTML(v.name.trim()||"Full Name")}</h2><div class="subtitle">${escapeHTML(v.job.trim()||(state.titleDisabled?"":"Your Professional Title"))}</div>`;
+    const renderedReferences=state.references.map(reference=>{
+      const lines=[["Relationship",reference.relationship],["Title",reference.title],["Company",reference.company],["Phone number",reference.phone],["Email",reference.email]].filter(([,value])=>value.trim());
+      if(!reference.name.trim()&&!lines.length)return "";
+      return `<div class="professional-reference">${reference.name.trim()?`<p class="professional-reference-name">${escapeHTML(reference.name.trim())}</p>`:""}${lines.length?`<ul>${lines.map(([label,value])=>`<li><strong>${label}:</strong> ${escapeHTML(value.trim())}</li>`).join("")}</ul>`:""}</div>`;
+    }).filter(Boolean);
+    const referencesSection=renderedReferences.length?`<h3 class="professional-references-heading">${renderedReferences.length===1?"Professional Reference":"Professional References"}</h3>${renderedReferences.join("")}`:"";
     let html="";
-    if(state.template==="Modern") html=`<aside class="side">${photo}${section("Contact",contact)}${skills}${languages}</aside><div class="main">${header}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}</div>`;
-    if(state.template==="Classic") html=`<div class="main"><div class="classic-header"><div class="classic-identity">${header}</div></div>${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}</div>`;
-    if(state.template==="Minimal") html=`<div class="main"><div class="minimal-header"><div class="minimal-identity">${header}</div>${photo}</div>${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}</div>`;
-    if(state.template==="Elegant") html=`<div class="hero">${photo}<div>${header}</div></div><div class="body">${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}</div>`;
-    if(state.template==="Professional") html=`<div class="hero">${photo}<div>${header}${contact}</div></div><div class="body">${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}</div>`;
-    if(state.template==="Executive") html=`<div class="executive-header">${photo}<div>${header}${contact}</div></div><div class="executive-body">${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}</div>`;
-    if(state.template==="Compact") html=`<div class="compact-header"><div>${header}${contact}</div>${photo}</div><div class="compact-body">${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}</div>`;
-    if(state.template==="Sidebar") html=`<div class="sidebar-main">${header}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}</div><aside class="sidebar-side">${photo}${section("Contact",contact)}${skills}${languages}</aside>`;
-    if(state.template==="Timeline") html=`<div class="timeline-header"><div class="timeline-identity">${header}</div>${photo}</div><div class="timeline-body">${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}</div>`;
-    if(state.template==="Monochrome") html=`<div class="mono-header">${photo}<div>${header}</div></div><div class="mono-grid"><div class="mono-main">${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}</div><aside class="mono-side">${section("Contact",contact)}${skills}${languages}</aside></div>`;
-    $("resumePreview").className=`resume ${state.template.toLowerCase()}`;
+    if(state.template==="Modern") html=`<aside class="side">${photo}${section("Contact",contact)}${skills}${languages}</aside><div class="main">${header}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${referencesSection}</div>`;
+    if(state.template==="Classic") html=`<div class="main"><div class="classic-header"><div class="classic-identity">${header}</div></div>${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}${referencesSection}</div>`;
+    if(state.template==="Minimal") html=`<div class="main"><div class="minimal-header"><div class="minimal-identity">${header}</div>${photo}</div>${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}${referencesSection}</div>`;
+    if(state.template==="Elegant") html=`<div class="hero">${photo}<div>${header}</div></div><div class="body">${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}${referencesSection}</div>`;
+    if(state.template==="Professional") html=`<div class="hero">${photo}<div>${header}${contact}</div></div><div class="body">${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}${referencesSection}</div>`;
+    if(state.template==="Executive") html=`<div class="executive-header">${photo}<div>${header}${contact}</div></div><div class="executive-body">${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}${referencesSection}</div>`;
+    if(state.template==="Compact") html=`<div class="compact-header"><div>${header}${contact}</div>${photo}</div><div class="compact-body">${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}${referencesSection}</div>`;
+    if(state.template==="Sidebar") html=`<div class="sidebar-main">${header}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${referencesSection}</div><aside class="sidebar-side">${photo}${section("Contact",contact)}${skills}${languages}</aside>`;
+    if(state.template==="Timeline") html=`<div class="timeline-header"><div class="timeline-identity">${header}</div>${photo}</div><div class="timeline-body">${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}${referencesSection}</div>`;
+    if(state.template==="Monochrome") html=`<div class="mono-header">${photo}<div>${header}</div></div><div class="mono-grid"><div class="mono-main">${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${referencesSection}</div><aside class="mono-side">${section("Contact",contact)}${skills}${languages}</aside></div>`;
+    if(state.template==="No Experience") { const detailRows=[["Nickname",v.nickname],["Age",v.age],["Sex",v.sex],["Birthday",v.birthday],["Birthplace",v.birthplace],["Father's name",v.fatherName],["Mother's name",v.motherName],["Civil status",v.civilStatus],["Nationality",v.nationality],["Religion",v.religion]].filter(([,value])=>value.trim()).map(([label,value])=>`<p class="noexp-detail"><strong>${label}</strong><span>${escapeHTML(value)}</span></p>`).join(""); const projectItems=state.projects.map(project=>{const parts=[project.name.trim(),project.context.trim(),project.year.trim(),project.description.trim()].filter(Boolean);return parts.length?`<div class="item">${textLines(parts.join("\n"))}</div>`:"";}).join(""); const expNote=v.experienceNote.trim()||"No formal work experience yet. Willing to learn and contribute."; const strengthItems=listItems(v.strengths.trim()||"Willingness to learn\nCommunication\nTeamwork"); html=`<aside class="noexp-side">${photo}${section("Contact",contact)}${detailRows?section("Personal information",detailRows):""}${skills}${section("Strengths",strengthItems)}${languages}</aside><div class="noexp-main">${header}${section(state.summaryHeading,textLines(summaryText))}${edu}${section("Experience",textLines(expNote))}${projectItems?section("Projects & activities",projectItems):""}${referencesSection}</div>`; }
+    $("resumePreview").className=`resume ${state.template.toLowerCase().replace(/\s+/g,"-")}`;
     setMobilePreviewGeometry($("resumePreview"));
     const previewWidth=$("resumePreview").clientWidth||500;
     const renderedPhotoSize=Math.round(previewWidth*state.photoSize/500);
@@ -303,11 +331,11 @@
   function renderTemplates() {
     document.querySelector(".template-count").textContent=`${templates.length} templates`;
     $("templateGrid").innerHTML=templates.map(name=>`<button type="button" class="template-option ${state.template===name?"selected":""}" data-template="${name}">
-      <div class="mini-page mini-${name.toLowerCase()}"><div class="mini-side ${(["Classic","Minimal","Elegant","Compact","Timeline"].includes(name)?"hidden":"")}"></div><div class="mini-lines"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+      <div class="mini-page mini-${name.toLowerCase().replace(/\s+/g,"-")}"><div class="mini-side ${(["Classic","Minimal","Elegant","Compact","Timeline"].includes(name)?"hidden":"")}"></div><div class="mini-lines"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
       <strong>${name}</strong><small>${state.template===name?"✓ Selected":"Select layout"}</small>
     </button>`).join("");
     $("templateGrid").querySelectorAll("[data-template]").forEach(button=>button.addEventListener("click",()=>{
-      state.template=button.dataset.template;renderTemplates();renderPreview();
+      const previousTemplate=state.template;state.template=button.dataset.template;if(state.template==="No Experience"&&previousTemplate!=="No Experience")state.summaryHeading="Career Objective";else if(previousTemplate==="No Experience"&&state.summaryHeading==="Career Objective")state.summaryHeading="Profile";renderTemplates();renderForm();renderPreview();
     }));
   }
   async function downloadPDF() {

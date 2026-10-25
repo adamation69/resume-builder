@@ -225,3 +225,31 @@ body[data-theme="dark"] .photo-shape-button[aria-pressed="true"]{background:#223
 .resume.monochrome .mono-grid{padding:2px 18px 12px;gap:10px}
 .resume.monochrome h3{margin:8px 0 4px;padding-bottom:3px}
 .resume.monochrome .item{margin-bottom:5px}
+/* Entry-level resume template. */
+.resume.no-experience{display:block;padding:0}
+.resume.no-experience .resume-inner{display:grid;grid-template-columns:32% 68%;min-height:100%}
+.resume.no-experience .noexp-side{background:#203a59;color:#fff;padding:22px 14px;overflow-wrap:anywhere}
+.resume.no-experience .noexp-side h3{color:#fff;border-color:#71839a;margin-top:14px}
+.resume.no-experience .noexp-side .avatar{display:block;margin:0 auto 14px}
+.resume.no-experience .noexp-main{padding:25px 18px;overflow-wrap:anywhere}
+.resume.no-experience .noexp-main>h2{margin-bottom:3px}
+.resume.no-experience .noexp-main>.subtitle{margin-bottom:8px}
+.resume.no-experience .noexp-main h3{margin:13px 0 6px}
+.resume.no-experience .item{margin-bottom:7px}
+.mini-no-experience .mini-side{background:#203a59}
+/* No Experience template: compact personal-data rows and optional experience guidance. */
+.resume.no-experience .noexp-side .noexp-detail{display:grid;grid-template-columns:42% minmax(0,1fr);gap:4px;margin:3px 0;line-height:1.3}
+.resume.no-experience .noexp-detail strong{font-weight:700}
+.resume.no-experience .noexp-detail span{min-width:0;overflow-wrap:anywhere}
+.resume.no-experience .noexp-side .contact p{margin:4px 0}
+.resume.no-experience .noexp-side h3{margin-top:11px}
+.noexp-experience-note small{display:block;margin-top:5px;color:var(--muted);font-size:11px}
+.noexp-subheading{margin:12px 0 4px;font-size:13px}
+.professional-references-heading{margin:10px 0 7px!important}
+.professional-reference{margin:0 0 8px;break-inside:avoid;page-break-inside:avoid}
+.professional-reference:last-child{margin-bottom:0}
+.professional-reference-name{margin:0 0 2px;font-style:italic}
+.professional-reference ul{margin:0;padding-left:18px}
+.professional-reference li{margin:0;padding-left:1px;line-height:1.35}
+.professional-reference li:last-child{margin-bottom:0}
+.reference-card .field-grid{row-gap:10px}
