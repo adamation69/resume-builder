@@ -81,6 +81,256 @@
   function textLines(value) {
     return escapeHTML(value).split("\n").map(line=>`<p>${line || "&nbsp;"}</p>`).join("");
   }
+  function normalizeResumeText(value) {
+    return String(value||"").replace(/\u00a0/g," ").replace(/[ \t]+/g," ").trim();
+  }
+  function extractResumeSections(lines) {
+    const headings={
+      personal:/^(personal information|contact information|contact details|personal details)$/i,
+      summary:/^(professional summary|summary|profile|professional profile|career objective|objective|about me)$/i,
+      experience:/^(work experience|professional experience|employment history|work history|experience)$/i,
+      education:/^(education|educational background|academic background|qualifications)$/i,
+      skills:/^(skills|key skills|core competencies|technical skills|areas of expertise)$/i,
+      languages:/^(languages|language skills)$/i,
+      references:/^(professional references|references|reference)$/i,
+      projects:/^(projects|projects & activities|selected projects)$/i,
+      ignored:/^(certifications|certificates|awards|honors|interests|volunteer experience|publications)$/i
+    };
+    const result={header:[],personal:[],summary:[],experience:[],education:[],skills:[],languages:[],references:[],projects:[]};
+    let current="header";
+    lines.forEach(line=>{
+      const clean=normalizeResumeText(line).replace(/[:：]$/,"" );
+      const section=Object.entries(headings).find(([,pattern])=>pattern.test(clean));
+      if(section){current=section[0]==="ignored"?"ignored":section[0];return;}
+      if(clean)result[current]?.push(clean);
+    });
+    return result;
+  }
+  function parseResumeDateRange(line) {
+    const datePart="(?:(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\\.?\\s+)?(?:19|20)\\d{2}|Present";
+    const match=normalizeResumeText(line).match(new RegExp(`(${datePart})\\s*(?:-|–|—|to)\\s*(${datePart})`,"i"));
+    if(!match)return null;
+    const parse=value=>{
+      const month=value.match(/^([A-Za-z]+)\s+/i);
+      const year=value.match(/(?:19|20)\d{2}/);
+      return {month:month?month[1]:"",year:year?year[0]:value};
+    };
+    return {start:parse(match[1]),end:parse(match[2])};
+  }
+  function splitResumeEntryTitle(value,kind) {
+    const parts=normalizeResumeText(value).split(/\s+\|\s+|\s+[•·]\s+|\s+at\s+/i);
+    if(kind==="experience")return {job:parts[0]||"",company:parts.slice(1).join(" | ")};
+    const schoolIndex=parts.findIndex(part=>/college|university|school|institute|academy|polytechnic|lyceum/i.test(part));
+    if(schoolIndex>=0)return {degree:parts.filter((_,index)=>index!==schoolIndex).join(" | "),school:parts[schoolIndex]};
+    return {degree:parts[0]||"",school:parts.slice(1).join(" | ")};
+  }
+  function parseResumeEntries(lines,kind) {
+    const dateIndexes=[];
+    lines.forEach((line,index)=>{if(parseResumeDateRange(line))dateIndexes.push(index);});
+    return dateIndexes.map((dateIndex,entryIndex)=>{
+      const range=parseResumeDateRange(lines[dateIndex]);
+      const titleLine=lines[dateIndex-1]||"";
+      const previousLine=lines[dateIndex-2]||"";
+      const canJoinPrevious=previousLine&&!/^[•·*▪◦-]\s*/.test(previousLine)&&previousLine.length<90&&!/[.!?]$/.test(previousLine)&&!parseResumeDateRange(previousLine);
+      const title=splitResumeEntryTitle(canJoinPrevious?`${previousLine} | ${titleLine}`:titleLine,kind);
+      const nextTitleIndex=dateIndexes[entryIndex+1]===undefined?lines.length:dateIndexes[entryIndex+1]-1;
+      const description=lines.slice(dateIndex+1,nextTitleIndex).filter(line=>line&&!/^(references|certifications|projects)$/i.test(line));
+      const hasListMarkers=description.some(line=>/^[\s]*[+«»‹›•·▪◦*–—-]+\s*/.test(line));
+      const descriptionLines=description.map(line=>({
+        marked:/^[\s]*[+«»‹›•·▪◦*–—-]+\s*/.test(line),
+        text:normalizeResumeText(line).replace(/^[+«»‹›•·▪◦*–—-]+\s*/,"")
+      })).filter(line=>line.text);
+      const bullets=[];
+      if(!hasListMarkers&&descriptionLines.length)bullets.push(descriptionLines.map(line=>line.text).join(" "));
+      else {
+        let foundBullet=false;
+        descriptionLines.forEach(line=>{
+          if(line.marked){bullets.push(`• ${line.text}`);foundBullet=true;}
+          else if(!foundBullet&&bullets.length&&!bullets[bullets.length-1].startsWith("• "))bullets[bullets.length-1]+=` ${line.text}`;
+          else if(!foundBullet)bullets.push(line.text);
+          else bullets[bullets.length-1]+=` ${line.text}`;
+        });
+      }
+      if(kind==="experience")return {...title,startMonth:range.start.month,startYear:range.start.year,endMonth:range.end.year==="Present"?"":range.end.month,endYear:range.end.year,description:bullets.join("\n")};
+      return {...title,start:range.start.year,end:range.end.year,description:bullets.join("\n"),degreeNone:false,descriptionNone:false,descriptionTouched:true};
+    }).filter(entry=>Object.values(entry).some(value=>typeof value==="string"&&value.trim()));
+  }
+  function parseResumeReferences(lines) {
+    const references=[];
+    let current=null;
+    const startReference=()=>{current={name:"",relationship:"",title:"",company:"",phone:"",email:""};references.push(current);};
+    lines.forEach(line=>{
+      const clean=normalizeResumeText(line).replace(/^[•·▪◦*-]\s*/,"");
+      if(/^reference\s*\d*$/i.test(clean)){if(!current||Object.values(current).some(Boolean))startReference();return;}
+      const labeled=clean.match(/^(name|relationship|title|position|company|phone(?: number)?|email)\s*[:|–-]\s*(.+)$/i);
+      if(labeled){
+        if(!current)startReference();
+        const key={name:"name",relationship:"relationship",title:"title",position:"title",company:"company","phone number":"phone",phone:"phone",email:"email"}[labeled[1].toLowerCase()];
+        if(key)current[key]=labeled[2].trim();
+        return;
+      }
+      const email=clean.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+      if(email){if(!current)startReference();current.email=email[0];return;}
+      if(!current||current.name||Object.values(current).some(Boolean))startReference();
+      if(!current.name)current.name=clean;
+    });
+    return references.filter(reference=>Object.values(reference).some(value=>value.trim()));
+  }
+  function parseResumeProjects(lines) {
+    const projects=[];
+    let current=null;
+    lines.forEach(line=>{
+      const clean=normalizeResumeText(line).replace(/^[•·▪◦*-]\s*/,"");
+      const labeled=clean.match(/^(project|activity|organization|course|year|description)\s*[:|–-]\s*(.*)$/i);
+      if(/^project\s*\d*$/i.test(clean)){if(current)projects.push(current);current={name:"",context:"",year:"",description:""};return;}
+      if(!current)current={name:"",context:"",year:"",description:""};
+      if(labeled){
+        const key={project:"name",activity:"name",organization:"context",course:"context",year:"year",description:"description"}[labeled[1].toLowerCase()];
+        if(key)current[key]=labeled[2];
+      }else if(/^(19|20)\d{2}$/.test(clean))current.year=clean;
+      else if(!current.name)current.name=clean;
+      else if(!current.context)current.context=clean;
+      else current.description+=(current.description?"\n":"")+clean;
+    });
+    if(current)projects.push(current);
+    return projects.filter(project=>Object.values(project).some(value=>value.trim()));
+  }
+  function parseResumeDetails(text) {
+    const lines=String(text||"").split(/\r?\n/).map(normalizeResumeText).filter(Boolean);
+    const sections=extractResumeSections(lines);
+    const allText=lines.join("\n");
+    const parsed={values:{},experience:parseResumeEntries(sections.experience,"experience"),education:parseResumeEntries(sections.education,"education"),skills:[],languages:[],references:parseResumeReferences(sections.references),projects:parseResumeProjects(sections.projects)};
+    const email=allText.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+    const phone=allText.match(/(?:\+?\d[\d\s().-]{7,}\d)/);
+    const website=allText.match(/(?:https?:\/\/|www\.|linkedin\.com\/in\/|github\.com\/)[^\s,]*/i);
+    if(email)parsed.values.email=email[0];
+    if(phone)parsed.values.phone=normalizeResumeText(phone[0]);
+    if(website)parsed.values.website=website[0].replace(/[),.;]+$/g,"");
+    const personalLines=[...sections.personal,...sections.header];
+    const labels={
+      name:/^(?:full\s+)?name\s*[:|–-]\s*(.+)$/i,
+      job:/^(?:professional\s+title|job\s+title|title|occupation)\s*[:|–-]\s*(.+)$/i,
+      email:/^(?:e-?mail|email\s+address)\s*[:|–-]\s*(.+)$/i,
+      phone:/^(?:phone|phone\s+number|mobile|contact\s+number)\s*[:|–-]\s*(.+)$/i,
+      location:/^(?:address|location|complete\s+address)\s*[:|–-]\s*(.+)$/i,
+      age:/^age\s*[:|–-]\s*(.+)$/i,
+      nationality:/^nationality\s*[:|–-]\s*(.+)$/i,
+      nickname:/^nickname\s*[:|–-]\s*(.+)$/i,
+      sex:/^(?:sex|gender)\s*[:|–-]\s*(.+)$/i,
+      birthday:/^(?:birthday|date\s+of\s+birth)\s*[:|–-]\s*(.+)$/i,
+      birthplace:/^birthplace\s*[:|–-]\s*(.+)$/i,
+      fatherName:/^father(?:'s)?\s+name\s*[:|–-]\s*(.+)$/i,
+      motherName:/^mother(?:'s)?\s+name\s*[:|–-]\s*(.+)$/i,
+      civilStatus:/^(?:civil\s+status|marital\s+status)\s*[:|–-]\s*(.+)$/i,
+      religion:/^religion\s*[:|–-]\s*(.+)$/i,
+      summary:/^(?:professional\s+)?summary\s*[:|–-]\s*(.+)$/i,
+      website:/^(?:website|linkedin|portfolio)\s*[:|–-]\s*(.+)$/i
+    };
+    personalLines.forEach(line=>Object.entries(labels).forEach(([key,pattern])=>{const match=line.match(pattern);if(match&&!parsed.values[key])parsed.values[key]=match[1].trim();}));
+    const topLines=personalLines.slice(0,16);
+    const name=topLines.find(line=>line.length<65&&/[A-Za-z]/.test(line)&&!/@|\d{3}|https?:|linkedin|resume|curriculum vitae/i.test(line)&&!/(street|avenue|road|city|province|country|address|email|phone)/i.test(line));
+    if(name&&!parsed.values.name)parsed.values.name=name.replace(/^(?:full\s+)?name\s*[:|–-]\s*/i,"");
+    const roleWords=/engineer|developer|manager|designer|analyst|assistant|coordinator|specialist|consultant|teacher|nurse|accountant|executive|technician|support|sales|marketing|writer|intern|director|officer|administrator/i;
+    const role=topLines.find(line=>line!==name&&line.length<90&&roleWords.test(line)&&!parseResumeDateRange(line));
+    if(role&&!parsed.values.job)parsed.values.job=role;
+    const address=topLines.find(line=>line!==name&&line.length<130&&/(street|st\.|avenue|ave\.|road|rd\.|city|province|country|address|philippines|usa|united states)/i.test(line)&&!/@|\d{7,}/.test(line));
+    if(address&&!parsed.values.location)parsed.values.location=address;
+    if(sections.summary.length&&!parsed.values.summary)parsed.values.summary=sections.summary.join("\n");
+    if(!parsed.experience.length&&sections.experience.length)parsed.values.experienceNote=sections.experience.join("\n");
+    if(sections.skills.length)parsed.values.strengths=sections.skills.join("\n");
+    const cleanListItem=value=>normalizeResumeText(value).replace(/^[+«»‹›•·▪◦*–—-]+\s*/,"");
+    parsed.skills=sections.skills.join(",").split(/[\n,;|•·▪◦]+/).map(cleanListItem).filter(value=>value&&value.length<70);
+    parsed.languages=sections.languages.join(",").split(/[\n,;|•·▪◦]+/).map(cleanListItem).filter(value=>value&&value.length<50);
+    return parsed;
+  }
+  async function readResumePdf(file) {
+    const bytes=new Uint8Array(await file.arrayBuffer());
+    if(new TextDecoder().decode(bytes.slice(0,5))!=="%PDF-")throw new Error("That file is not a valid PDF. Choose a PDF resume.");
+    $("resumeImportStatus").textContent="Reading PDF text…";
+    const pdfjs=await import("https://cdn.jsdelivr.net/npm/pdfjs-dist@6.4.299/build/pdf.mjs");
+    pdfjs.GlobalWorkerOptions.workerSrc="https://cdn.jsdelivr.net/npm/pdfjs-dist@6.4.299/build/pdf.worker.mjs";
+    const documentTask=pdfjs.getDocument({data:bytes,enableScripting:false,isEvalSupported:false});
+    const pdf=await documentTask.promise;
+    if(pdf.numPages>25)throw new Error("This PDF has more than 25 pages. Please upload a shorter resume PDF.");
+    let text="";
+    for(let pageNumber=1;pageNumber<=pdf.numPages;pageNumber++){
+      const page=await pdf.getPage(pageNumber);
+      const content=await page.getTextContent();
+      const rows=new Map();
+      content.items.forEach(item=>{
+        if(!item.str?.trim())return;
+        const y=Math.round(item.transform?.[5]||0);
+        if(!rows.has(y))rows.set(y,[]);
+        rows.get(y).push({x:item.transform?.[4]||0,text:item.str});
+      });
+      const pageText=[...rows.entries()].sort((a,b)=>b[0]-a[0]).map(([,items])=>items.sort((a,b)=>a.x-b.x).map(item=>item.text).join(" ")).join("\n");
+      text+=pageText+"\n";
+      page.cleanup();
+    }
+    if(text.replace(/\s/g,"").length<45){
+      $("resumeImportStatus").textContent="Scanned PDF detected. Running OCR…";
+      const tesseract=await new Promise((resolve,reject)=>{
+        if(window.Tesseract){resolve(window.Tesseract);return;}
+        const script=document.createElement("script");
+        script.src="https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js";
+        script.onload=()=>resolve(window.Tesseract);
+        script.onerror=()=>reject(new Error("OCR could not load. Check your internet connection and try again."));
+        document.head.append(script);
+      });
+      if(!tesseract?.createWorker)throw new Error("OCR is unavailable in this browser.");
+      const worker=await tesseract.createWorker("eng",1,{logger:message=>{
+        if(message.status==="recognizing text")$("resumeImportStatus").textContent="Scanning PDF with OCR… "+Math.round((message.progress||0)*100)+"%";
+      }});
+      try{
+        text="";
+        for(let pageNumber=1;pageNumber<=pdf.numPages;pageNumber++){
+          $("resumeImportStatus").textContent="Scanning PDF page "+pageNumber+" of "+pdf.numPages+"…";
+          const page=await pdf.getPage(pageNumber);
+          const viewport=page.getViewport({scale:2});
+          const canvas=document.createElement("canvas");
+          canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);
+          const context=canvas.getContext("2d");
+          if(!context)throw new Error("This browser cannot scan PDF pages.");
+          await page.render({canvasContext:context,viewport}).promise;
+          const result=await worker.recognize(canvas);
+          text+=result.data.text+"\n";
+          canvas.width=canvas.height=1;
+          page.cleanup();
+        }
+      }finally{await worker.terminate();}
+    }
+    if(typeof pdf.cleanup==="function")await pdf.cleanup().catch(()=>{});
+    if(typeof documentTask.destroy==="function")await documentTask.destroy().catch(()=>{});
+    return text;
+  }
+  async function importResumePdf(file) {
+    const status=$("resumeImportStatus");
+    try{
+      if(!file)return;
+      if(!/\.pdf$/i.test(file.name))throw new Error("Only PDF files are accepted.");
+      if(file.size>25*1024*1024)throw new Error("The PDF must be 25 MB or smaller.");
+      const details=parseResumeDetails(await readResumePdf(file));
+      const importedFields=Object.entries(details.values).filter(([,value])=>value?.trim());
+      if(!importedFields.length&&!details.experience.length&&!details.education.length&&!details.skills.length&&!details.languages.length&&!details.references.length&&!details.projects.length){
+        throw new Error("No resume details could be read. This PDF may be image-only or use an unsupported layout.");
+      }
+      importedFields.forEach(([key,value])=>state.values[key]=value);
+      if(details.experience.length)state.experience=details.experience;
+      if(details.education.length)state.education=details.education;
+      if(details.skills.length)state.skills=details.skills;
+      if(details.languages.length)state.languages=details.languages;
+      if(details.references.length)state.references=details.references;
+      if(details.projects.length)state.projects=details.projects;
+      if(details.values.job)state.titleDisabled=false;
+      state.step=0;
+      renderForm();renderPreview();
+      const counts=[importedFields.length?importedFields.length+" details":"",details.experience.length?details.experience.length+" experience entries":"",details.education.length?details.education.length+" education entries":"",details.skills.length?details.skills.length+" skills":"",details.languages.length?details.languages.length+" languages":"",details.references.length?details.references.length+" references":"",details.projects.length?details.projects.length+" projects":""].filter(Boolean);
+      status.textContent="Imported "+counts.join(", ")+". Review the fields and correct anything that needs adjustment.";
+    }catch(error){
+      console.error("Resume PDF import failed",error);
+      status.textContent=error.message||"Could not read that PDF. Try another file.";
+    }finally{$("resumePdf").value="";}
+  }
   function descriptionMarkup(value) {
     let html="",listType="";
     const closeList=()=>{if(listType){html+=`</${listType}>`;listType="";}};
@@ -453,8 +703,8 @@
       const endYear=endIsPresent?"":job.endYear.trim()||(example?"Present":"");
       const dates=[ [startMonth,startYear].filter(Boolean).join(" "), endIsPresent?"Present":[endMonth,endYear].filter(Boolean).join(" ") ].filter(Boolean).join(" – ");
       const description=job.description.trim()||(example?"Describe your responsibilities and achievements. Add measurable results where possible.":"");
-      const details=[title,dates].filter(Boolean);
-      const content=textLines(details.join("\n"))+(description?descriptionMarkup(description):"");
+      const titleLine=title?`<p><strong>${escapeHTML(title)}</strong></p>`:"";
+      const content=titleLine+(dates?textLines(dates):"")+(description?descriptionMarkup(description):"");
       return content?`<div class="item">${content}</div>`:"";
     }).join("");
     const exp=section("Work experience",expContent);
@@ -667,6 +917,7 @@
   $("removePhoto").addEventListener("click",()=>{state.photo="";$("photo").value="";renderPreview();});
   $("downloadTop").addEventListener("click",downloadPDF);
   $("downloadPreview").addEventListener("click",downloadPDF);
+  $("resumePdf").addEventListener("change",event=>importResumePdf(event.target.files?.[0]));
   $("previousResumePage").addEventListener("click",()=>showPreviewPage(state.previewPage-1));
   $("nextResumePage").addEventListener("click",()=>showPreviewPage(state.previewPage+1));
   window.addEventListener("beforeprint",()=>fitResumeToPage($("resumePreview").querySelector(".resume-inner")));

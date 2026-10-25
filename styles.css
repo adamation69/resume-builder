@@ -272,10 +272,19 @@ body[data-theme="dark"] .photo-shape-button[aria-pressed="true"]{background:#223
 .resume.modern .side .professional-reference ul,.resume.sidebar .sidebar-side .professional-reference ul,.resume.monochrome .mono-side .professional-reference ul{padding-left:12px}
 .reference-card .field-grid{row-gap:10px}
 .editor{scroll-margin-top:84px}
+.resume-import{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 12px;margin:0 0 16px;padding:12px;border:1px solid var(--line);border-radius:9px;background:var(--bg)}
+.resume-import h3{margin:0 0 4px;font-size:13px}
+.resume-import p{margin:0;font-size:11px;line-height:1.4}
+.resume-import-button{grid-column:2;grid-row:1/3;white-space:nowrap}
+.resume-import-status{grid-column:1/-1;min-height:0;color:var(--muted)}
+.resume-import-status:empty{display:none}
+body[data-theme="dark"] .resume-import{background:#141e2f}
+@media(max-width:520px){.resume-import{grid-template-columns:minmax(0,1fr);gap:9px}.resume-import-button{grid-column:1;grid-row:auto;justify-self:start}}
 
 /* Preserve resume typography and allow long content to continue below page one. */
 #resumePreview{height:auto;aspect-ratio:auto;overflow:visible}
 #resumePreview .resume-inner,#resumePreview.modern .resume-inner{min-height:707px;overflow:visible}
+#resumePreview .side,#resumePreview .main,#resumePreview .sidebar-main,#resumePreview .sidebar-side,#resumePreview .mono-main,#resumePreview .mono-side,#resumePreview .body,#resumePreview .executive-body,#resumePreview .compact-body,#resumePreview .timeline-body,#resumePreview .noexp-side,#resumePreview .noexp-main{padding-bottom:24px}
 .resume-page-mask{position:absolute;z-index:5;top:0;pointer-events:none}
 .preview-page-controls{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:10px;color:var(--muted);font-size:12px}
 .preview-page-controls[hidden]{display:none}

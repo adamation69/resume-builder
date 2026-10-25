@@ -10,6 +10,7 @@ A responsive resume-builder website built with plain HTML, CSS, and JavaScript. 
 - Editable personal details, work experience, education, skills, and languages
 - Optional profile photo upload with centered cropping and adjustable size and shape
 - Live preview updates as you edit
+- PDF resume import with local text extraction and OCR for scanned PDFs
 - Works locally in a modern browser
 
 ## Run the project
@@ -29,3 +30,5 @@ A responsive resume-builder website built with plain HTML, CSS, and JavaScript. 
 ## Notes
 
 This is a front-end-only starter project. Resume information is held in browser memory and is not sent to a server. Refreshing the page resets the sample data. For production use, consider adding save/load functionality, form validation, and automated PDF generation.
+
+PDF resume import runs in the browser. It accepts PDF files only; text extraction and OCR may load PDF.js and Tesseract.js from their CDNs when needed. The selected resume file is not uploaded.
