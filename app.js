@@ -758,11 +758,12 @@
     const exp=section("Work experience",state.noExperienceMode?noExperienceContent:expContent);
     const eduContent=state.education.map(item=>{
       const example=item.isExample||item.isNew;
-      const title=[item.degreeNone?"":item.degree.trim()||(example?"Degree or Qualification":""),item.school.trim()||(example?"School Name":"")].filter(Boolean).join(" | ");
+      const degree=item.degreeNone?"":item.degree.trim()||(example?"Degree or Qualification":"");
+      const school=item.school.trim()||(example?"School Name":"");
+      const title=degree||school?`<p>${degree?`${escapeHTML(degree)}${school?" | ":""}`:""}${school?`<strong>${escapeHTML(school)}</strong>`:""}</p>`:"";
       const years=[item.start.trim()||(example?"2016":""),item.end.trim()||(example?"2020":"")].filter(Boolean).join(" – ");
       const description=item.descriptionNone?"":item.description.trim()||(example&&!item.descriptionTouched?"Relevant coursework, honors, or achievements.":"");
-      const details=[title,years].filter(Boolean);
-      const content=textLines(details.join("\n"))+(description?descriptionMarkup(description):"");
+      const content=title+(years?textLines(years):"")+(description?descriptionMarkup(description):"");
       return content?`<div class="item">${content}</div>`:"";
     }).join("");
     const edu=section(state.template==="No Experience"?"Educational background":"Education",eduContent);
