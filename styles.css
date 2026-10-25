@@ -299,3 +299,51 @@ body[data-theme="dark"] .resume-import{background:#141e2f}
   #resumePreview .item,#resumePreview .professional-reference{break-inside:avoid;page-break-inside:avoid}
   #resumePreview h3{break-after:avoid;page-break-after:avoid}
 }
+
+.resume-customization{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:center;gap:8px;margin:0 0 9px;padding:0;border:0;background:transparent}
+.resume-customization label{display:flex;align-items:center;gap:5px;min-width:0;color:var(--ink);font-size:10px;font-weight:700;white-space:nowrap}
+.resume-customization select{flex:1;width:auto;min-width:0;border:1px solid var(--line);border-radius:6px;padding:5px 6px;background:var(--white);color:var(--ink);font:inherit;font-size:10px}
+.resume-customization select:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+#resumePreview{font-family:"DM Sans",Arial,sans-serif!important;font-size:calc(8px * var(--resume-font-scale,1));font-weight:var(--resume-font-weight,400)}
+#resumePreview h2{font-size:calc(var(--photo-header-size,20px) * var(--resume-font-scale,1))!important;font-weight:var(--resume-heading-weight,700)}
+#resumePreview h3{font-size:calc(9px * var(--resume-font-scale,1))!important;font-weight:var(--resume-heading-weight,700);color:var(--resume-accent,#34578c)!important;border-color:var(--resume-rule,#cdd6e4)!important}
+#resumePreview p,#resumePreview li,#resumePreview .subtitle,#resumePreview .contact-row{font-size:calc(8px * var(--resume-font-scale,1));font-weight:var(--resume-font-weight,400)}
+#resumePreview .professional-reference{font-size:calc(7px * var(--resume-font-scale,1));font-weight:var(--resume-font-weight,400)}
+#resumePreview .professional-reference-heading,#resumePreview .professional-references-heading{font-size:calc(9px * var(--resume-font-scale,1))!important;font-weight:var(--resume-heading-weight,700)}
+#resumePreview strong{font-weight:var(--resume-heading-weight,700)}
+#resumePreview .side,#resumePreview .sidebar-side,#resumePreview .noexp-side{background:var(--resume-sidebar,#192a46)!important;color:var(--resume-sidebar-text,#fff)!important}
+#resumePreview .side h3,#resumePreview .sidebar-side h3,#resumePreview .noexp-side h3{color:var(--resume-sidebar-text,#fff)!important;border-color:var(--resume-rule,#cdd6e4)!important}
+#resumePreview.professional .hero,#resumePreview .executive-header{background:var(--resume-sidebar,#192a46)!important}
+#resumePreview.creative .hero{background:linear-gradient(120deg,var(--resume-sidebar,#192a46),var(--resume-accent,#34578c))!important}
+#resumePreview.elegant .hero,#resumePreview .mono-header{background:var(--resume-tint,#f1f3f6)!important;border-color:var(--resume-accent,#34578c)!important}
+#resumePreview.elegant .hero h2,#resumePreview.elegant .hero .subtitle,#resumePreview.monochrome .mono-header h2,#resumePreview.monochrome .mono-header .subtitle{color:var(--resume-heading-color,#26344b)!important}
+#resumePreview .mono-side{background:var(--resume-tint,#f1f3f6);color:var(--resume-heading-color,#26344b);border-color:var(--resume-rule,#cdd6e4)}
+#resumePreview .timeline-header{border-color:var(--resume-accent,#34578c)!important}
+#resumePreview .timeline-body>h3{border-left-color:var(--resume-accent,#34578c)!important}
+#resumePreview .timeline-body .item{border-left-color:var(--resume-rule,#cdd6e4)!important}
+@media(max-width:700px){.resume-customization{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.resume-customization label{font-size:9px;gap:3px}.resume-customization select{font-size:9px;padding:5px 3px}}
+@media(max-width:420px){.resume-customization{grid-template-columns:1fr;gap:6px}.resume-customization label{font-size:10px}.resume-customization select{font-size:10px;padding:6px}}
+@media(max-width:520px){
+  html,body{width:100%;min-width:0;overflow-x:hidden}
+  .topbar{width:100%;min-width:0;padding:10px 12px;gap:8px}
+  .brand{min-width:0;gap:8px}.brand-icon{width:36px;height:36px;flex:0 0 36px}.brand strong{font-size:13px}
+  .topbar-actions{flex:0 0 auto;gap:6px}.topbar-actions .btn{padding:8px 9px;font-size:12px}
+  .page{width:100%;max-width:none;margin:0;padding:16px 12px}
+  .workspace{width:100%;min-width:0;grid-template-columns:minmax(0,1fr);gap:16px}
+  .editor,.preview-column{width:100%;min-width:0}
+  .preview-heading{align-items:center;gap:8px;margin-bottom:10px}.preview-heading h2{font-size:16px}
+  .preview-heading .btn{padding:8px 9px;font-size:11px}
+  .resume-customization{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:9px}
+  .resume-customization label,.resume-customization label:last-child{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:5px;font-size:10px;white-space:normal;min-width:0}
+  .resume-customization select{width:100%;min-width:0;font-size:11px;padding:6px}
+  .resume-customization label:last-child{grid-column:1/-1}
+  .preview-stage{width:100%;min-width:0;padding:8px}
+  .preview-page-controls{padding-bottom:4px}.preview-page-arrow{width:36px;height:36px}
+  .templates{margin-top:16px}
+}
+@media print{
+  #resumePreview h2{font-size:calc(var(--photo-header-size,20px) * var(--resume-font-scale,1))!important}
+  #resumePreview h3{font-size:calc(10pt * var(--resume-font-scale,1))!important}
+  #resumePreview p,#resumePreview li{font-size:calc(8pt * var(--resume-font-scale,1))!important}
+}

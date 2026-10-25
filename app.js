@@ -29,7 +29,7 @@
   const templates = ["Modern","Classic","Professional","Elegant","Minimal","Executive","Compact","Sidebar","Timeline","Monochrome","No Experience"];
   const skillExamples=["Communication","Problem Solving","Project Management","Microsoft Office"];
   const languageExamples=["English","Spanish"];
-  const state = {step:0, template:"Modern", photo:"", photoSize:120, photoShape:"circle", titleDisabled:false, summaryHeading:"Profile", previewPage:0,previewPages:[0],previewContentHeight:707,experience:[{job:"",company:"",startMonth:"",startYear:"",endMonth:"",endYear:"",description:"",isExample:true}],education:[{degree:"",degreeNone:false,school:"",start:"",end:"",description:"",descriptionNone:false,descriptionTouched:false,isExample:true}],skills:["","","",""],languages:["",""],projects:[],references:[],values:{}};
+  const state = {step:0, template:"Modern", photo:"", photoSize:120, photoShape:"circle", resumeFontSize:"1",resumeFontWeight:"regular",resumePalette:"navy",titleDisabled:false, summaryHeading:"Profile", previewPage:0,previewPages:[0],previewContentHeight:707,experience:[{job:"",company:"",startMonth:"",startYear:"",endMonth:"",endYear:"",description:"",isExample:true}],education:[{degree:"",degreeNone:false,school:"",start:"",end:"",description:"",descriptionNone:false,descriptionTouched:false,isExample:true}],skills:["","","",""],languages:["",""],projects:[],references:[],values:{}};
   const photoUpload = document.querySelector(".photo-upload");
   const photoUploadHome = photoUpload.parentElement;
   const photoSizeSelect = document.createElement("select");
@@ -621,6 +621,26 @@
     frame.style.left=`${(availableWidth-500*scale)/2}px`;
     stage.style.height=`${Math.ceil(707*scale+verticalPadding)}px`;
   }
+  function applyResumeAppearance(frame) {
+    const palettes={
+      navy:{accent:"#34578c",sidebar:"#192a46",sidebarText:"#ffffff",heading:"#26344b",tint:"#f1f3f6",rule:"#cdd6e4"},
+      teal:{accent:"#087f78",sidebar:"#123c3b",sidebarText:"#ffffff",heading:"#173a38",tint:"#e8f5f3",rule:"#a8d8d2"},
+      burgundy:{accent:"#923c50",sidebar:"#4b1f2b",sidebarText:"#ffffff",heading:"#3d2028",tint:"#f7ecef",rule:"#dfb8c1"},
+      purple:{accent:"#6551a8",sidebar:"#33265f",sidebarText:"#ffffff",heading:"#302452",tint:"#f0edfa",rule:"#c8bfe7"},
+      charcoal:{accent:"#46576a",sidebar:"#29313b",sidebarText:"#ffffff",heading:"#252d36",tint:"#edf0f3",rule:"#c3ccd5"}
+    };
+    const palette=palettes[state.resumePalette]||palettes.navy;
+    const weights={regular:[400,700],medium:[500,700],bold:[700,800]}[state.resumeFontWeight]||[400,700];
+    frame.style.setProperty("--resume-font-scale",state.resumeFontSize);
+    frame.style.setProperty("--resume-font-weight",String(weights[0]));
+    frame.style.setProperty("--resume-heading-weight",String(weights[1]));
+    frame.style.setProperty("--resume-accent",palette.accent);
+    frame.style.setProperty("--resume-sidebar",palette.sidebar);
+    frame.style.setProperty("--resume-sidebar-text",palette.sidebarText);
+    frame.style.setProperty("--resume-heading-color",palette.heading);
+    frame.style.setProperty("--resume-tint",palette.tint);
+    frame.style.setProperty("--resume-rule",palette.rule);
+  }
   function showPreviewPage(pageIndex) {
     const frame=$("resumePreview");
     const inner=frame.querySelector(".resume-inner");
@@ -742,6 +762,7 @@
     if(state.template==="No Experience") { const detailRows=[["Nickname",v.nickname],["Age",v.age],["Sex",v.sex],["Birthday",v.birthday],["Birthplace",v.birthplace],["Father's name",v.fatherName],["Mother's name",v.motherName],["Civil status",v.civilStatus],["Nationality",v.nationality],["Religion",v.religion]].filter(([,value])=>value.trim()).map(([label,value])=>`<p class="noexp-detail"><strong>${label}</strong><span>${escapeHTML(value)}</span></p>`).join(""); const projectItems=state.projects.map(project=>{const parts=[project.name.trim(),project.context.trim(),project.year.trim(),project.description.trim()].filter(Boolean);return parts.length?`<div class="item">${textLines(parts.join("\n"))}</div>`:"";}).join(""); const expNote=v.experienceNote.trim()||"No formal work experience yet. Willing to learn and contribute."; const strengthItems=listItems(v.strengths.trim()||"Willingness to learn\nCommunication\nTeamwork"); html=`<aside class="noexp-side">${photo}${section("Contact",contact)}${detailRows?section("Personal information",detailRows):""}${skills}${section("Strengths",strengthItems)}${languages}</aside><div class="noexp-main">${header}${section(state.summaryHeading,textLines(summaryText))}${edu}${section("Experience",textLines(expNote))}${projectItems?section("Projects & activities",projectItems):""}${referencesSection}</div>`; }
     const previewFrame=$("resumePreview");
     previewFrame.className=`resume ${state.template.toLowerCase().replace(/\s+/g,"-")}`;
+    applyResumeAppearance(previewFrame);
     previewFrame.style.height="auto";
     previewFrame.style.minHeight="707px";
     previewFrame.style.aspectRatio="auto";
@@ -917,6 +938,9 @@
   $("removePhoto").addEventListener("click",()=>{state.photo="";$("photo").value="";renderPreview();});
   $("downloadTop").addEventListener("click",downloadPDF);
   $("downloadPreview").addEventListener("click",downloadPDF);
+  $("resumeFontSize").addEventListener("change",event=>{state.resumeFontSize=event.target.value;renderPreview();});
+  $("resumeFontWeight").addEventListener("change",event=>{state.resumeFontWeight=event.target.value;renderPreview();});
+  $("resumePalette").addEventListener("change",event=>{state.resumePalette=event.target.value;renderPreview();});
   $("resumePdf").addEventListener("change",event=>importResumePdf(event.target.files?.[0]));
   $("previousResumePage").addEventListener("click",()=>showPreviewPage(state.previewPage-1));
   $("nextResumePage").addEventListener("click",()=>showPreviewPage(state.previewPage+1));

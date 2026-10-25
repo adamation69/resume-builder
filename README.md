@@ -11,6 +11,7 @@ A responsive resume-builder website built with plain HTML, CSS, and JavaScript. 
 - Optional profile photo upload with centered cropping and adjustable size and shape
 - Live preview updates as you edit
 - PDF resume import with local text extraction and OCR for scanned PDFs
+- Adjustable resume font size, font weight, and template color palettes
 - Works locally in a modern browser
 
 ## Run the project

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Create a professional resume with customizable templates and A4 PDF export.">
   <title>Resume Builder</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=mobile-1">
   <link rel="icon" type="image/svg+xml" href="resume-logo.svg">
 </head>
 <body>
@@ -50,6 +50,11 @@
 
       <section class="preview-column">
         <div class="preview-heading"><div><h2>Live preview</h2><p class="muted">Your resume updates as you type.</p></div><button class="btn btn-light" id="downloadPreview" type="button">Download as PDF</button></div>
+        <div class="resume-customization" aria-label="Resume appearance settings">
+          <label>Font size<select id="resumeFontSize"><option value="0.9">Small</option><option value="1" selected>Standard</option><option value="1.1">Large</option></select></label>
+          <label>Font weight<select id="resumeFontWeight"><option value="regular" selected>Regular</option><option value="medium">Medium</option><option value="bold">Bold</option></select></label>
+          <label>Color palette<select id="resumePalette"><option value="navy" selected>Navy</option><option value="teal">Teal</option><option value="burgundy">Burgundy</option><option value="purple">Purple</option><option value="charcoal">Charcoal</option></select></label>
+        </div>
         <div class="preview-stage"><article class="resume modern" id="resumePreview" aria-label="Resume preview"></article></div>
         <div class="preview-page-controls" aria-label="Resume preview pages" hidden><button type="button" class="preview-page-arrow" id="previousResumePage" aria-label="Previous page" disabled>&#8592;</button><span id="resumePageCount" aria-live="polite">1 / 1</span><button type="button" class="preview-page-arrow" id="nextResumePage" aria-label="Next page" disabled>&#8594;</button></div>
         <p class="preview-note">Longer resumes continue onto additional A4 pages without shrinking the text.</p>
@@ -64,6 +69,6 @@
   </main>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" referrerpolicy="no-referrer"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" referrerpolicy="no-referrer"></script>
-  <script src="app.js"></script>
+  <script src="app.js?v=appearance-3"></script>
 </body>
 </html>
