@@ -26,10 +26,12 @@
       {key:"website", label:"Website / LinkedIn (optional)", value:"", placeholder:"linkedin.com/in/yourname", wide:true}
     ]}
   ];
-  const templates = ["Modern","Classic","Professional","Elegant","Minimal","Executive","Compact","Sidebar","Timeline","Monochrome","No Experience"];
+  const templates = ["Modern","Classic","Professional","Elegant","Minimal","Executive","Compact","Sidebar","Timeline","Monochrome"];
   const skillExamples=["Communication","Problem Solving","Project Management","Microsoft Office"];
   const languageExamples=["English","Spanish"];
-  const state = {step:0, template:"Modern", photo:"", photoSize:120, photoShape:"circle", resumeFontSize:"1",resumeFontWeight:"regular",resumePalette:"navy",titleDisabled:false, summaryHeading:"Profile", previewPage:0,previewPages:[0],previewContentHeight:707,experience:[{job:"",company:"",startMonth:"",startYear:"",endMonth:"",endYear:"",description:"",isExample:true}],education:[{degree:"",degreeNone:false,school:"",start:"",end:"",description:"",descriptionNone:false,descriptionTouched:false,isExample:true}],skills:["","","",""],languages:["",""],projects:[],references:[],values:{}};
+  const state = {step:0, template:"Modern", noExperienceMode:false, photo:"", photoSize:120, photoShape:"circle", resumeFontSize:"1",resumeFontWeight:"regular",resumePalette:"navy",titleDisabled:false, summaryHeading:"Profile", previewPage:0,previewPages:[0],previewContentHeight:707,experience:[{job:"",company:"",startMonth:"",startYear:"",endMonth:"",endYear:"",description:"",isExample:true}],education:[{degree:"",degreeNone:false,school:"",start:"",end:"",description:"",descriptionNone:false,descriptionTouched:false,isExample:true}],skills:["","","",""],languages:["",""],projects:[],references:[],values:{}};
+  state.certifications=[];
+  state.certificationFormat="two-line";
   const photoUpload = document.querySelector(".photo-upload");
   const photoUploadHome = photoUpload.parentElement;
   const photoSizeSelect = document.createElement("select");
@@ -363,24 +365,25 @@
   }
   function renderForm() {
     const section = sections[state.step];
+    const noExperienceForm=state.template==="No Experience"||state.noExperienceMode;
     $("resumeImport").hidden=state.step!==0;
     photoUploadHome.append(photoUpload); photoUpload.hidden=state.step!==0;
     $("stepCount").textContent = `Step ${state.step+1} of ${sections.length}`;
     document.querySelectorAll(".step")[1].querySelector("span").textContent=state.template==="No Experience"?"Experience":"Experience";
-    $("fields").innerHTML = `<h3 class="form-section-title">${section.title}</h3><div class="field-grid">${section.fields.filter(f=>!f.noExperienceOnly||state.template==="No Experience").map(f=>f.key==="name"?`
+    $("fields").innerHTML = `<h3 class="form-section-title">${section.title}</h3><div class="field-grid">${section.fields.filter(f=>!f.noExperienceOnly||noExperienceForm).map(f=>f.key==="name"?`
       <div class="name-photo-row wide"><div class="field name-field">
         <label for="field-${f.key}">${f.label}</label>
         <input id="field-${f.key}" data-key="${f.key}" value="${escapeHTML(state.values[f.key])}" placeholder="${escapeHTML(state.template==="No Experience"&&f.key==="summary"?"Describe your career goals, strengths, and what you hope to contribute.":state.template==="No Experience"&&f.key==="job"?"Target role or position":f.placeholder||"")}">
       </div><div class="photo-slot"></div></div>`:`
       <div class="field ${f.wide?"wide":""}">
         ${f.key==="job"?`<div class="title-label-row"><label for="field-${f.key}">${f.label}</label><button type="button" class="none-toggle ${state.titleDisabled?"active":""}" data-title-none aria-pressed="${state.titleDisabled}">${state.titleDisabled?"Add professional title":"None"}</button></div>`:`<label for="field-${f.key}">${f.label}</label>`}
-        ${f.key==="summary"?`<label class="summary-choice-label" for="summaryHeading">Summary heading in resume</label><select class="summary-heading-select" id="summaryHeading"><option value="Profile" ${state.summaryHeading==="Profile"?"selected":""}>Profile</option><option value="About Me" ${state.summaryHeading==="About Me"?"selected":""}>About Me</option>${state.template==="No Experience"?`<option value="Career Objective" ${state.summaryHeading==="Career Objective"?"selected":""}>Career Objective</option>`:""}</select>`:""}
+        ${f.key==="summary"?`<label class="summary-choice-label" for="summaryHeading">Summary heading in resume</label><select class="summary-heading-select" id="summaryHeading"><option value="Profile" ${state.summaryHeading==="Profile"?"selected":""}>Profile</option><option value="About Me" ${state.summaryHeading==="About Me"?"selected":""}>About Me</option>${noExperienceForm?`<option value="Career Objective" ${state.summaryHeading==="Career Objective"?"selected":""}>Career Objective</option>`:""}</select>`:""}
         ${f.type==="textarea"
-          ? `<textarea id="field-${f.key}" data-key="${f.key}" rows="${f.key==="summary"?4:5}" placeholder="${escapeHTML(state.template==="No Experience"&&f.key==="summary"?"Describe your career goals, strengths, and what you hope to contribute.":state.template==="No Experience"&&f.key==="job"?"Target role or position":f.placeholder||"")}">${escapeHTML(state.values[f.key])}</textarea>`
-          : `<input id="field-${f.key}" data-key="${f.key}" value="${escapeHTML(state.values[f.key])}" placeholder="${escapeHTML(state.template==="No Experience"&&f.key==="summary"?"Describe your career goals, strengths, and what you hope to contribute.":state.template==="No Experience"&&f.key==="job"?"Target role or position":f.placeholder||"")}" ${f.key==="job"&&state.titleDisabled?"disabled":""}>`}
+          ? `<textarea id="field-${f.key}" data-key="${f.key}" rows="${f.key==="summary"?4:5}" placeholder="${escapeHTML(noExperienceForm&&f.key==="summary"?"Describe your career goals, strengths, and what you hope to contribute.":noExperienceForm&&f.key==="job"?"Target role or position":f.placeholder||"")}">${escapeHTML(state.values[f.key])}</textarea>`
+          : `<input id="field-${f.key}" data-key="${f.key}" value="${escapeHTML(state.values[f.key])}" placeholder="${escapeHTML(noExperienceForm&&f.key==="summary"?"Describe your career goals, strengths, and what you hope to contribute.":noExperienceForm&&f.key==="job"?"Target role or position":f.placeholder||"")}" ${f.key==="job"&&state.titleDisabled?"disabled":""}>`}
       </div>`).join("")}</div>`;
     if(state.template==="No Experience"&&!state.experience.length)state.experience.push({job:"",company:"",startMonth:"",startYear:"",endMonth:"",endYear:"",description:""});
-    const experienceEntries=state.template==="No Experience"?state.experience.slice(0,1):state.experience;
+    const experienceEntries=state.template==="No Experience"||state.noExperienceMode?state.experience.slice(0,1):state.experience;
     if(state.step===1) {
       $("fields").innerHTML=`<h3 class="form-section-title">Work experience</h3><div class="experience-list">${experienceEntries.map((job,index)=>`
         <section class="entry-card"><div class="entry-heading"><strong>Experience ${index+1}</strong><div class="entry-heading-actions"><button type="button" class="experience-move-button" data-move-experience="${index}" data-direction="-1" aria-label="Move experience ${index+1} up" title="Move up" ${index===0?"disabled":""}>&#8593;</button><button type="button" class="experience-move-button" data-move-experience="${index}" data-direction="1" aria-label="Move experience ${index+1} down" title="Move down" ${index===experienceEntries.length-1?"disabled":""}>&#8595;</button>${experienceEntries.length>1?`<button type="button" class="text-button" data-remove-experience="${index}">Remove</button>`:""}</div></div>
@@ -391,9 +394,9 @@
           <div class="field-pair"><div class="field"><label>End month</label><input data-experience="${index}" data-part="endMonth" value="${escapeHTML(job.endMonth)}" placeholder="Month or Present"></div>
           <div class="field"><label>End year</label><input data-experience="${index}" data-part="endYear" value="${escapeHTML(job.endYear)}" placeholder="Year or Present"></div></div>
           <div class="field wide"><label>Description</label><div class="description-tools" role="toolbar" aria-label="Description formatting"><button type="button" class="description-tool-button" data-format-kind="experience" data-format-index="${index}" data-format-style="bullet">• Bullets</button><button type="button" class="description-tool-button" data-format-kind="experience" data-format-index="${index}" data-format-style="numbered">1. Numbered</button><button type="button" class="description-tool-button" data-format-kind="experience" data-format-index="${index}" data-format-style="dash">– Dashes</button><button type="button" class="description-tool-button" data-format-kind="experience" data-format-index="${index}" data-format-style="clear">Clear</button></div><textarea data-experience="${index}" data-part="description" rows="3" placeholder="Describe your responsibilities and achievements.">${escapeHTML(job.description)}</textarea></div></div>
-        </section>`).join("")}</div>${state.template==="No Experience"?"":`<button type="button" class="btn btn-light add-entry" id="addExperience">+ Add experience</button>`}`;
+        </section>`).join("")}</div>${state.template==="No Experience"||state.noExperienceMode?"":`<button type="button" class="btn btn-light add-entry" id="addExperience">+ Add experience</button>`}`;
     }
-    if(state.step===1 && state.template==="No Experience") {
+    if(state.step===1 && (state.template==="No Experience"||state.noExperienceMode)) {
       $("fields").insertAdjacentHTML("beforeend",`<h4 class="noexp-subheading">Projects &amp; activities</h4><div class="experience-list">${state.projects.map((project,index)=>`<section class="entry-card"><div class="entry-heading"><strong>Project ${index+1}</strong>${state.projects.length>1?`<button type="button" class="text-button" data-remove-project="${index}">Remove</button>`:""}</div><div class="field-grid"><div class="field"><label>Project or activity</label><input data-project="${index}" data-part="name" value="${escapeHTML(project.name)}" placeholder="Academic or personal project"></div><div class="field"><label>Organization or course</label><input data-project="${index}" data-part="context" value="${escapeHTML(project.context)}" placeholder="School, course, or organization"></div><div class="field"><label>Year</label><input data-project="${index}" data-part="year" value="${escapeHTML(project.year)}" placeholder="Year"></div><div class="field wide"><label>Description</label><textarea data-project="${index}" data-part="description" rows="3" placeholder="Describe what you created, contributed, or learned.">${escapeHTML(project.description)}</textarea></div></div></section>`).join("")}</div><button type="button" class="btn btn-light add-entry" id="addProject">+ Add project or activity</button>`);
     }
     if(state.step===2) {
@@ -405,6 +408,11 @@
           <div class="field"><label>End year</label><input data-education="${index}" data-part="end" value="${escapeHTML(edu.end)}" placeholder="Year"></div>
           <div class="field wide"><div class="title-label-row"><label>Description</label><button type="button" class="none-toggle ${edu.descriptionNone?"active":""}" data-description-none="${index}" aria-pressed="${edu.descriptionNone}">${edu.descriptionNone?"Add Description":"None"}</button></div><div class="description-tools" role="toolbar" aria-label="Description formatting"><button type="button" class="description-tool-button" data-format-kind="education" data-format-index="${index}" data-format-style="bullet" ${edu.descriptionNone?"disabled":""}>• Bullets</button><button type="button" class="description-tool-button" data-format-kind="education" data-format-index="${index}" data-format-style="numbered" ${edu.descriptionNone?"disabled":""}>1. Numbered</button><button type="button" class="description-tool-button" data-format-kind="education" data-format-index="${index}" data-format-style="dash" ${edu.descriptionNone?"disabled":""}>– Dashes</button><button type="button" class="description-tool-button" data-format-kind="education" data-format-index="${index}" data-format-style="clear" ${edu.descriptionNone?"disabled":""}>Clear</button></div><textarea data-education="${index}" data-part="description" rows="3" placeholder="Relevant coursework, honors, or achievements." ${edu.descriptionNone?"disabled":""}>${escapeHTML(edu.description)}</textarea></div></div>
         </section>`).join("")}</div><button type="button" class="btn btn-light add-entry" id="addEducation">+ Add education</button>`;
+    }
+    if(state.step===2) {
+      $("fields").insertAdjacentHTML("beforeend",`<h3 class="form-section-title certifications-form-title">Certifications</h3><p class="muted certification-guidance">Include credentials relevant to the role. Add the issuer and date earned; include an expiry date if applicable.</p><div class="certification-editor-list">${state.certifications.map((cert,index)=>`<section class="entry-card certification-card"><div class="entry-heading"><strong>Certification ${index+1}</strong><button type="button" class="text-button" data-remove-certification="${index}">Remove</button></div><div class="field-grid"><div class="field"><label>Certificate or certification</label><input data-certification="${index}" data-part="name" value="${escapeHTML(cert.name)}" placeholder="Certificate name"></div><div class="field"><label>Issuing organization</label><input data-certification="${index}" data-part="issuer" value="${escapeHTML(cert.issuer)}" placeholder="Organization"></div><div class="field"><label>Date earned</label><input data-certification="${index}" data-part="year" value="${escapeHTML(cert.year)}" placeholder="Month Year"></div><div class="field"><label>Expiration (optional)</label><input data-certification="${index}" data-part="expiry" value="${escapeHTML(cert.expiry)}" placeholder="Month Year"></div><div class="field wide"><label>Description (optional)</label><textarea data-certification="${index}" data-part="description" rows="2" placeholder="Relevant skills or topics covered.">${escapeHTML(cert.description)}</textarea></div></div></section>`).join("")}</div><button type="button" class="btn btn-light add-entry" id="addCertification">+ Add certification</button>`);
+      $("fields").querySelector(".certifications-form-title").insertAdjacentHTML("afterend",`<div class="certification-format-picker" role="group" aria-label="Certification display format"><button type="button" class="certification-format-option ${state.certificationFormat==="one-line"?"selected":""}" data-certification-format="one-line" aria-pressed="${state.certificationFormat==="one-line"}"><strong>One-line</strong><small>Fast and ATS friendly</small></button><button type="button" class="certification-format-option ${state.certificationFormat==="two-line"?"selected":""}" data-certification-format="two-line" aria-pressed="${state.certificationFormat==="two-line"}"><strong>Two-line</strong><small>Easy to read</small></button><button type="button" class="certification-format-option ${state.certificationFormat==="in-progress"?"selected":""}" data-certification-format="in-progress" aria-pressed="${state.certificationFormat==="in-progress"}"><strong>In progress</strong><small>Expected completion</small></button></div>`);
+      $("fields").querySelectorAll('[data-certification][data-part="year"]').forEach(input=>{input.closest(".field").querySelector("label").textContent=state.certificationFormat==="in-progress"?"Expected completion date":"Date earned";input.placeholder="Month Year";});
     }
     if(state.step===3) {
       $("fields").innerHTML=`<h3 class="form-section-title">Skills &amp; languages</h3><div class="repeat-section"><h4>Skills</h4><div class="repeat-list">${state.skills.map((value,index)=>`<div class="repeat-row"><input data-skill="${index}" value="${escapeHTML(value)}" placeholder="${skillExamples[index]||"Skill"}"><button type="button" class="text-button" data-remove-skill="${index}" aria-label="Remove skill">Remove</button></div>`).join("")}</div><button type="button" class="btn btn-light add-entry" id="addSkill">+ Add skill</button></div><div class="repeat-section"><h4>Languages</h4><div class="repeat-list">${state.languages.map((value,index)=>`<div class="repeat-row"><input data-language="${index}" value="${escapeHTML(value)}" placeholder="${languageExamples[index]||"Language"}"><button type="button" class="text-button" data-remove-language="${index}" aria-label="Remove language">Remove</button></div>`).join("")}</div><button type="button" class="btn btn-light add-entry" id="addLanguage">+ Add language</button></div><div class="field wide website-field"><label for="field-website">Website / LinkedIn (optional)</label><input id="field-website" data-key="website" value="${escapeHTML(state.values.website)}" placeholder="linkedin.com/in/yourname"></div>`;
@@ -525,6 +533,10 @@
     $("addEducation")?.addEventListener("click",()=>{
       state.education.push({degree:"",degreeNone:false,school:"",start:"",end:"",description:"",descriptionNone:false,descriptionTouched:false,isNew:true});renderPreview();renderForm();
     });
+    $("fields").querySelectorAll("[data-certification]").forEach(el=>el.addEventListener("input",()=>{state.certifications[Number(el.dataset.certification)][el.dataset.part]=el.value;renderPreview();}));
+    $("fields").querySelectorAll("[data-certification-format]").forEach(button=>button.addEventListener("click",()=>{state.certificationFormat=button.dataset.certificationFormat;renderForm();renderPreview();}));
+    $("fields").querySelectorAll("[data-remove-certification]").forEach(button=>button.addEventListener("click",()=>{state.certifications.splice(Number(button.dataset.removeCertification),1);renderPreview();renderForm();}));
+    $("addCertification")?.addEventListener("click",()=>{state.certifications.push({name:"",issuer:"",year:"",expiry:"",description:""});renderForm();});
     $("fields").querySelectorAll("[data-skill]").forEach(input=>input.addEventListener("input",()=>{
       state.skills[Number(input.dataset.skill)]=input.value;renderPreview();
     }));
@@ -717,6 +729,8 @@
     const photo=state.photo ? `<img class="avatar" src="${state.photo}" alt="Profile photo">` : "";
     const contactRow=(type,value)=>`<p class="contact-row">${contactIcon(type)}<span>${escapeHTML(value)}</span></p>`;
     const contact=`<div class="contact">${contactRow("email",v.email.trim()||"you@example.com")}${contactRow("phone",v.phone.trim()||"+63 9123456789")}${contactRow("location",v.location.trim()||"House Number, Street, Barangay, Municipality / City, Province, Country, Zip Code")}${v.website.trim()?contactRow("website",v.website):""}</div>`;
+    const personalInformation=[["Nickname",v.nickname],["Age",v.age],["Sex",v.sex],["Birthday",v.birthday],["Birthplace",v.birthplace],["Father's name",v.fatherName],["Mother's name",v.motherName],["Civil status",v.civilStatus],["Nationality",v.nationality],["Religion",v.religion]].filter(([,value])=>value.trim());
+    const personalInformationMarkup=state.noExperienceMode&&personalInformation.length?`<h3 class="personal-information-heading">Personal information</h3><div class="personal-information-list">${personalInformation.map(([label,value])=>`<p class="personal-information-row"><strong>${escapeHTML(label)}</strong><span>${escapeHTML(value)}</span></p>`).join("")}</div>`:"";
     const expContent=state.experience.map((job,index)=>{
       const example=job.isExample||job.isNew;
       const title=[job.job.trim()||(example?"Job Title":""),job.company.trim()||(example?"Company Name":"")].filter(Boolean).join(" | ");
@@ -731,7 +745,17 @@
       const content=titleLine+(dates?textLines(dates):"")+(description?descriptionMarkup(description):"");
       return content?`<div class="item">${content}</div>`:"";
     }).join("");
-    const exp=section("Work experience",expContent);
+    const noExperienceEntryContent=state.experience.slice(0,1).filter(job=>[job.job,job.company,job.startMonth,job.startYear,job.endMonth,job.endYear,job.description].some(value=>value.trim())).map(job=>{
+      const title=[job.job.trim(),job.company.trim()].filter(Boolean).join(" | ");
+      const start=[job.startMonth.trim(),job.startYear.trim()].filter(Boolean).join(" ");
+      const endIsPresent=/present/i.test(job.endMonth)||/present/i.test(job.endYear);
+      const end=endIsPresent?"Present":[job.endMonth.trim(),job.endYear.trim()].filter(Boolean).join(" ");
+      const dates=[start,end].filter(Boolean).join(" – ");
+      return `<div class="item">${title?`<p><strong>${escapeHTML(title)}</strong></p>`:""}${dates?textLines(dates):""}${job.description.trim()?descriptionMarkup(job.description):""}</div>`;
+    }).join("");
+    const noExperienceProjectContent=state.projects.map(project=>{const parts=[project.name.trim(),project.context.trim(),project.year.trim(),project.description.trim()].filter(Boolean);return parts.length?`<div class="item">${textLines(parts.join("\n"))}</div>`:"";}).join("");
+    const noExperienceContent=(noExperienceEntryContent||textLines("No formal work experience yet. Willing to learn and contribute."))+(noExperienceProjectContent?section("Projects & activities",noExperienceProjectContent):"");
+    const exp=section("Work experience",state.noExperienceMode?noExperienceContent:expContent);
     const eduContent=state.education.map(item=>{
       const example=item.isExample||item.isNew;
       const title=[item.degreeNone?"":item.degree.trim()||(example?"Degree or Qualification":""),item.school.trim()||(example?"School Name":"")].filter(Boolean).join(" | ");
@@ -742,6 +766,17 @@
       return content?`<div class="item">${content}</div>`:"";
     }).join("");
     const edu=section(state.template==="No Experience"?"Educational background":"Education",eduContent);
+    const certificationsContent=state.certifications.map(cert=>{
+      const name=cert.name.trim(),issuer=cert.issuer.trim(),year=cert.year.trim(),expiry=cert.expiry.trim(),description=cert.description.trim();
+      if(!name&&!issuer&&!year&&!expiry&&!description)return "";
+      const title=name?`${escapeHTML(name)}${year&&state.certificationFormat!=="in-progress"?` (${escapeHTML(year)})`:""}`:escapeHTML(year);
+      if(state.certificationFormat==="one-line")return `<div class="certification-item"><p class="certification-one-line"><strong>${title}</strong>${issuer?` | ${escapeHTML(issuer)}`:""}${expiry?` | Expires ${escapeHTML(expiry)}`:""}</p>${description?descriptionMarkup(description):""}</div>`;
+      if(state.certificationFormat==="in-progress")return `<div class="certification-item"><p class="certification-name"><strong>${title}</strong></p>${issuer?`<p class="certification-issuer"><em>${escapeHTML(issuer)}</em></p>`:""}<p class="certification-expiry">In progress${year?` (Expected ${escapeHTML(year)})`:""}</p>${description?descriptionMarkup(description):""}</div>`;
+      return `<div class="certification-item"><p class="certification-name"><strong>${title}</strong></p>${issuer?`<p class="certification-issuer"><em>${escapeHTML(issuer)}</em></p>`:""}${expiry?`<p class="certification-expiry">Expires ${escapeHTML(expiry)}</p>`:""}${description?descriptionMarkup(description):""}</div>`;
+    }).filter(Boolean).join("");
+    const certifications=certificationsContent?section("Professional Certificates",`<div class="certification-grid">${certificationsContent}</div>`):"";
+    const sidebarCertifications=state.noExperienceMode?"":certifications;
+    const mainCertifications=state.noExperienceMode?certifications:"";
     const skills=section("Skills",listItems(state.skills.map((value,index)=>value.trim()||skillExamples[index]||"").filter(Boolean).join("\n")));
     const languages=section("Languages",listItems(state.languages.map((value,index)=>value.trim()||languageExamples[index]||"").filter(Boolean).join("\n")));
     const summaryText=v.summary.trim()||(state.template==="No Experience"?"Motivated student or recent graduate eager to apply my strengths, learn quickly, and contribute to a team.":"Write a short introduction highlighting your experience, strengths, and career goals.");
@@ -753,16 +788,16 @@
     }).filter(Boolean);
     const referencesSection=renderedReferences.length?`<h3 class="professional-references-heading">${renderedReferences.length===1?"Professional Reference":"Professional References"}</h3>${renderedReferences.join("")}`:"";
     let html="";
-    if(state.template==="Modern") html=`<aside class="side">${photo}${section("Contact",contact)}${skills}${languages}${referencesSection}</aside><div class="main">${header}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}</div>`;
-    if(state.template==="Classic") html=`<div class="main"><div class="classic-header"><div class="classic-identity">${header}</div></div>${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}${referencesSection}</div>`;
-    if(state.template==="Minimal") html=`<div class="main"><div class="minimal-header"><div class="minimal-identity">${header}</div>${photo}</div>${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}${referencesSection}</div>`;
-    if(state.template==="Elegant") html=`<div class="hero">${photo}<div>${header}</div></div><div class="body">${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}${referencesSection}</div>`;
-    if(state.template==="Professional") html=`<div class="hero">${photo}<div>${header}${contact}</div></div><div class="body">${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}${referencesSection}</div>`;
-    if(state.template==="Executive") html=`<div class="executive-header">${photo}<div>${header}${contact}</div></div><div class="executive-body">${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}${referencesSection}</div>`;
-    if(state.template==="Compact") html=`<div class="compact-header"><div>${header}${contact}</div>${photo}</div><div class="compact-body">${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}${referencesSection}</div>`;
-    if(state.template==="Sidebar") html=`<div class="sidebar-main">${header}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}</div><aside class="sidebar-side">${photo}${section("Contact",contact)}${skills}${languages}${referencesSection}</aside>`;
-    if(state.template==="Timeline") html=`<div class="timeline-header"><div class="timeline-identity">${header}</div>${photo}</div><div class="timeline-body">${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${skills}${languages}${referencesSection}</div>`;
-    if(state.template==="Monochrome") html=`<div class="mono-header">${photo}<div>${header}</div></div><div class="mono-grid"><div class="mono-main">${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}</div><aside class="mono-side">${section("Contact",contact)}${skills}${languages}${referencesSection}</aside></div>`;
+    if(state.template==="Modern") html=`<aside class="side">${photo}${section("Contact",contact)}${skills}${sidebarCertifications}${languages}${referencesSection}</aside><div class="main">${header}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${mainCertifications}</div>`;
+    if(state.template==="Classic") html=`<div class="main"><div class="classic-header"><div class="classic-identity">${header}</div></div>${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${certifications}${skills}${languages}${referencesSection}</div>`;
+    if(state.template==="Minimal") html=`<div class="main"><div class="minimal-header"><div class="minimal-identity">${header}</div>${photo}</div>${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${certifications}${skills}${languages}${referencesSection}</div>`;
+    if(state.template==="Elegant") html=`<div class="hero">${photo}<div>${header}</div></div><div class="body">${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${certifications}${skills}${languages}${referencesSection}</div>`;
+    if(state.template==="Professional") html=`<div class="hero">${photo}<div>${header}${contact}</div></div><div class="body">${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${certifications}${skills}${languages}${referencesSection}</div>`;
+    if(state.template==="Executive") html=`<div class="executive-header">${photo}<div>${header}${contact}</div></div><div class="executive-body">${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${certifications}${skills}${languages}${referencesSection}</div>`;
+    if(state.template==="Compact") html=`<div class="compact-header"><div>${header}${contact}</div>${photo}</div><div class="compact-body">${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${certifications}${skills}${languages}${referencesSection}</div>`;
+    if(state.template==="Sidebar") html=`<div class="sidebar-main">${header}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${mainCertifications}</div><aside class="sidebar-side">${photo}${section("Contact",contact)}${skills}${sidebarCertifications}${languages}${referencesSection}</aside>`;
+    if(state.template==="Timeline") html=`<div class="timeline-header"><div class="timeline-identity">${header}</div>${photo}</div><div class="timeline-body">${section("Contact",contact)}${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${certifications}${skills}${languages}${referencesSection}</div>`;
+    if(state.template==="Monochrome") html=`<div class="mono-header">${photo}<div>${header}</div></div><div class="mono-grid"><div class="mono-main">${section(state.summaryHeading,textLines(summaryText))}${exp}${edu}${mainCertifications}</div><aside class="mono-side">${section("Contact",contact)}${skills}${sidebarCertifications}${languages}${referencesSection}</aside></div>`;
     if(state.template==="No Experience") { const detailRows=[["Nickname",v.nickname],["Age",v.age],["Sex",v.sex],["Birthday",v.birthday],["Birthplace",v.birthplace],["Father's name",v.fatherName],["Mother's name",v.motherName],["Civil status",v.civilStatus],["Nationality",v.nationality],["Religion",v.religion]].filter(([,value])=>value.trim()).map(([label,value])=>`<p class="noexp-detail"><strong>${label}</strong><span>${escapeHTML(value)}</span></p>`).join(""); const projectItems=state.projects.map(project=>{const parts=[project.name.trim(),project.context.trim(),project.year.trim(),project.description.trim()].filter(Boolean);return parts.length?`<div class="item">${textLines(parts.join("\n"))}</div>`:"";}).join(""); const expNote=v.experienceNote.trim(); const expNoteContent=expNote?`<div class="item noexp-experience-entry"><p><strong>Relevant Experience</strong></p>${descriptionMarkup(expNote)}</div>`:textLines("No formal work experience yet. Willing to learn and contribute."); const strengthItems=listItems(v.strengths.trim()||"Willingness to learn\nCommunication\nTeamwork"); html=`<aside class="noexp-side">${photo}${section("Contact",contact)}${detailRows?section("Personal information",detailRows):""}${skills}${section("Strengths",strengthItems)}${languages}</aside><div class="noexp-main">${header}${section(state.summaryHeading,textLines(summaryText))}${edu}${section("Experience",expNoteContent)}${projectItems?section("Projects & activities",projectItems):""}${referencesSection}</div>`; }
     const previewFrame=$("resumePreview");
     previewFrame.className=`resume ${state.template.toLowerCase().replace(/\s+/g,"-")}`;
@@ -784,11 +819,24 @@
     previewFrame.style.setProperty("--photo-subtitle-size",`${photoTextSizes[1]}px`);
     previewFrame.style.setProperty("--photo-detail-size",`${photoTextSizes[2]}px`);
     previewFrame.innerHTML=`<div class="resume-inner">${html}</div><div class="resume-page-mask resume-page-main-mask" aria-hidden="true"></div><div class="resume-page-mask resume-page-side-mask" aria-hidden="true"></div><div class="resume-page-mask resume-page-main-bottom-mask" aria-hidden="true"></div><div class="resume-page-mask resume-page-side-bottom-mask" aria-hidden="true"></div>`;
+    if(personalInformationMarkup) {
+      const sidebar=previewFrame.querySelector(".side,.sidebar-side,.mono-side,.noexp-side");
+      if(sidebar) {
+        const contactBlock=sidebar.querySelector(".contact");
+        if(contactBlock)contactBlock.insertAdjacentHTML("afterend",personalInformationMarkup);
+        else sidebar.insertAdjacentHTML("beforeend",personalInformationMarkup);
+      } else {
+        const main=previewFrame.querySelector(".main,.body,.executive-body,.compact-body,.sidebar-main,.timeline-body,.mono-main,.noexp-main")||previewFrame.querySelector(".resume-inner");
+        const anchor=[...main.querySelectorAll("h3")].find(heading=>/^(work experience|experience|education|educational background)$/i.test(heading.textContent.trim()));
+        if(anchor)anchor.insertAdjacentHTML("beforebegin",personalInformationMarkup);
+        else main.insertAdjacentHTML("beforeend",personalInformationMarkup);
+      }
+    }
     if(state.template==="No Experience") {
       const experienceHeading=[...previewFrame.querySelectorAll(".noexp-main h3")].find(heading=>heading.textContent.trim()==="Experience");
       if(experienceHeading) {
         experienceHeading.textContent="Work experience";
-        const entries=state.experience.slice(0,1).filter(job=>[job.job,job.company,job.startMonth,job.startYear,job.endMonth,job.endYear,job.description].some(value=>value.trim())).map(job=>{
+        const entries=state.noExperienceMode?noExperienceEntryContent:state.experience.slice(0,1).filter(job=>[job.job,job.company,job.startMonth,job.startYear,job.endMonth,job.endYear,job.description].some(value=>value.trim())).map(job=>{
           const title=[job.job.trim(),job.company.trim()].filter(Boolean).join(" | ");
           const start=[job.startMonth.trim(),job.startYear.trim()].filter(Boolean).join(" ");
           const endIsPresent=/present/i.test(job.endMonth)||/present/i.test(job.endYear);
@@ -815,6 +863,7 @@
       <div class="mini-page mini-${name.toLowerCase().replace(/\s+/g,"-")}"><div class="mini-side ${(["Classic","Minimal","Elegant","Compact","Timeline"].includes(name)?"hidden":"")}"></div><div class="mini-lines"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
       <strong>${name}</strong><small>${state.template===name?"✓ Selected":"Select layout"}</small>
     </button>`).join("");
+    if(state.noExperienceMode) $("templateGrid").querySelectorAll("[data-template]").forEach(button=>{button.querySelector("small").textContent=button.dataset.template===state.template?"Selected no-experience style":"No-experience version";});
     $("templateGrid").querySelectorAll("[data-template]").forEach(button=>button.addEventListener("click",()=>{
       const previousTemplate=state.template;state.template=button.dataset.template;if(state.template==="No Experience"&&previousTemplate!=="No Experience")state.summaryHeading="Career Objective";else if(previousTemplate==="No Experience"&&state.summaryHeading==="Career Objective")state.summaryHeading="Profile";renderTemplates();renderForm();renderPreview();
     }));
@@ -962,6 +1011,7 @@
   $("resumeFontSize").addEventListener("change",event=>{state.resumeFontSize=event.target.value;renderPreview();});
   $("resumeFontWeight").addEventListener("change",event=>{state.resumeFontWeight=event.target.value;renderPreview();});
   $("resumePalette").addEventListener("change",event=>{state.resumePalette=event.target.value;renderPreview();});
+  $("noExperienceMode").addEventListener("change",event=>{state.noExperienceMode=event.target.checked;if(event.target.checked&&state.summaryHeading==="Profile")state.summaryHeading="Career Objective";else if(!event.target.checked&&state.template!=="No Experience"&&state.summaryHeading==="Career Objective")state.summaryHeading="Profile";renderForm();renderTemplates();renderPreview();});
   $("resumePdf").addEventListener("change",event=>importResumePdf(event.target.files?.[0]));
   $("previousResumePage").addEventListener("click",()=>showPreviewPage(state.previewPage-1));
   $("nextResumePage").addEventListener("click",()=>showPreviewPage(state.previewPage+1));
