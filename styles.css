@@ -1,6 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
 :root{--ink:#17243d;--muted:#74829a;--blue:#365cf5;--line:#e2e8f1;--bg:#f5f7fb;--white:#fff}
 body[data-theme="dark"]{--ink:#edf2ff;--muted:#9aa8c0;--line:#2b3850;--bg:#111827;--white:#182235}
+body[data-theme="dark"] .step{background:#202d43;color:#a9b7cf;border-color:#2b3850}
+body[data-theme="dark"] .step.active{background:#293b67;color:#b8c7ff;border-color:#365cf5}
 body[data-theme="dark"] .field label{color:var(--ink)}
 body[data-theme="dark"] .field input,body[data-theme="dark"] .field textarea{background:var(--white);color:var(--ink);-webkit-text-fill-color:var(--ink);border-color:var(--line);color-scheme:dark}
 body[data-theme="dark"] .field input::placeholder,body[data-theme="dark"] .field textarea::placeholder{color:var(--muted);-webkit-text-fill-color:var(--muted);opacity:1}
