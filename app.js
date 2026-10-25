@@ -352,10 +352,11 @@
     const originalFrameStyle=resume.getAttribute("style");
     const originalContentStyle=content.getAttribute("style");
     const originalFitScale=resume.dataset.fitScale;
-    const bounds=resume.getBoundingClientRect();
-    const captureWidth=Math.round(bounds.width);
-    const captureHeight=Math.round(bounds.height);
-    Object.assign(resume.style,{position:"fixed",left:"0",top:"0",width:`${captureWidth}px`,height:`${captureHeight}px`,minHeight:`${captureHeight}px`,maxWidth:"none",minWidth:"0",aspectRatio:"210 / 297",margin:"0",overflow:"hidden",zIndex:"2147483647",pointerEvents:"none"});
+    // The mobile preview is visually scaled with CSS. Capture its unscaled A4
+    // canvas so the PDF keeps the same proportions and full-page placement.
+    const captureWidth=500;
+    const captureHeight=707;
+    Object.assign(resume.style,{position:"fixed",left:"0",top:"0",width:`${captureWidth}px`,height:`${captureHeight}px`,minHeight:`${captureHeight}px`,maxWidth:"none",minWidth:"0",aspectRatio:"210 / 297",margin:"0",overflow:"hidden",zIndex:"2147483647",pointerEvents:"none",transform:"none",transformOrigin:"top left"});
     fitResumeToPage(content);
     const restore=()=>{
       if(originalFrameStyle===null) resume.removeAttribute("style"); else resume.setAttribute("style",originalFrameStyle);
