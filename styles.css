@@ -35,6 +35,13 @@ body[data-theme="dark"] .photo-size-select{background:var(--white);color:var(--i
 .repeat-list{display:grid;gap:7px}
 .repeat-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
 .repeat-row input{width:100%;min-width:0;border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--white);color:var(--ink);font:inherit;font-size:13px}
+.reorderable-field{position:relative;min-width:0}
+.repeat-row .reorderable-field input{padding-right:68px}
+.list-reorder-controls{position:absolute;right:6px;top:50%;transform:translateY(-50%);display:flex;gap:3px}
+.list-reorder-button{display:grid;place-items:center;width:25px;height:25px;padding:0;border:1px solid var(--line);border-radius:6px;background:var(--white);color:var(--ink);font:inherit;font-size:14px;line-height:1;cursor:pointer}
+.list-reorder-button:hover:not(:disabled){border-color:var(--blue);color:var(--blue)}
+.list-reorder-button:disabled,.experience-move-button:disabled{display:none!important}
+.list-reorder-button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 #resumePreview.elegant .hero .avatar{margin:0}
 .resume.elegant .body h3:first-child{margin-top:13px}
 .mini-elegant{border-top:4px solid #365cf5}
