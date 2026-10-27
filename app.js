@@ -780,8 +780,17 @@
     const mainCertifications=state.noExperienceMode?certifications:"";
     const sidebarEducation=state.noExperienceMode?"":edu;
     const mainEducation=state.noExperienceMode?edu:"";
-    const skills=section("Skills",listItems(state.skills.map((value,index)=>value.trim()||skillExamples[index]||"").filter(Boolean).join("\n")));
-    const languages=section("Languages",listItems(state.languages.map((value,index)=>value.trim()||languageExamples[index]||"").filter(Boolean).join("\n")));
+    const useBalancedLists=["Classic","Professional","Elegant","Minimal","Executive","Compact","Timeline"].includes(state.template);
+    const skillItems=state.skills.map((value,index)=>value.trim()||skillExamples[index]||"").filter(Boolean);
+    const languageItems=state.languages.map((value,index)=>value.trim()||languageExamples[index]||"").filter(Boolean);
+    const renderResumeList=(title,items,splitAfter)=>{
+      const shouldSplit=useBalancedLists&&items.length>splitAfter;
+      const renderColumn=values=>values.map(value=>`<p>• ${escapeHTML(value)}</p>`).join("");
+      const content=shouldSplit?(()=>{const splitAt=Math.ceil(items.length/2);return `<div class="resume-list-column">${renderColumn(items.slice(0,splitAt))}</div><div class="resume-list-column">${renderColumn(items.slice(splitAt))}</div>`;})():renderColumn(items);
+      return section(title,`<div class="resume-list${shouldSplit?" resume-list-split":""}">${content}</div>`);
+    };
+    const skills=renderResumeList("Skills",skillItems,4);
+    const languages=renderResumeList("Languages",languageItems,2);
     const summaryText=v.summary.trim()||(state.template==="No Experience"?"Motivated student or recent graduate eager to apply my strengths, learn quickly, and contribute to a team.":"Write a short introduction highlighting your experience, strengths, and career goals.");
     const header=`<h2>${escapeHTML(v.name.trim()||"Full Name")}</h2><div class="subtitle">${escapeHTML(v.job.trim()||(state.titleDisabled?"":"Your Professional Title"))}</div>`;
     const renderedReferences=state.references.map(reference=>{

@@ -161,6 +161,11 @@ body[data-theme="dark"] .photo-shape-button[aria-pressed="true"]{background:#223
 #resumePreview .item ul,#resumePreview .item ol{margin:0 0 3px;padding-left:16px}
 #resumePreview .item li{margin:0 0 2px;line-height:1.35}
 
+/* Balance longer skill and language lists in templates with a single main column. */
+#resumePreview .resume-list-split{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:18px;align-items:start}
+#resumePreview .resume-list-column{min-width:0}
+#resumePreview .resume-list-column>p{margin:0 0 4px;overflow-wrap:anywhere}
+
 /* Additional resume templates. */
 .resume.executive,.resume.compact,.resume.timeline,.resume.monochrome{display:block;padding:0}
 .resume.executive .executive-header{display:flex;align-items:center;gap:18px;padding:26px 24px;background:#1b2c49;color:#fff;border-bottom:4px solid #365cf5}
