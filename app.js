@@ -404,7 +404,7 @@
         <section class="entry-card"><div class="entry-heading"><strong>Education ${index+1}</strong><div class="entry-heading-actions"><button type="button" class="experience-move-button" data-move-education="${index}" data-direction="-1" aria-label="Move education ${index+1} up" title="Move up" ${index===0?"disabled":""}>&#8593;</button><button type="button" class="experience-move-button" data-move-education="${index}" data-direction="1" aria-label="Move education ${index+1} down" title="Move down" ${index===state.education.length-1?"disabled":""}>&#8595;</button>${state.education.length>1?`<button type="button" class="text-button" data-remove-education="${index}">Remove</button>`:""}</div></div>
           <div class="field-grid"><div class="field"><div class="title-label-row"><label>Degree or qualification</label><button type="button" class="none-toggle ${edu.degreeNone?"active":""}" data-degree-none="${index}" aria-pressed="${edu.degreeNone}">${edu.degreeNone?"Add":"None"}</button></div><input data-education="${index}" data-part="degree" value="${escapeHTML(edu.degree)}" placeholder="Degree or qualification" ${edu.degreeNone?"disabled":""}></div>
           <div class="field"><label>School name</label><input data-education="${index}" data-part="school" value="${escapeHTML(edu.school)}" placeholder="School name"></div>
-          <div class="field"><label>Start year</label><input data-education="${index}" data-part="start" value="${escapeHTML(edu.start)}" placeholder="Year"></div>
+          <div class="field"><div class="title-label-row"><label>Start year</label><button type="button" class="none-toggle ${edu.startYearHidden?"active":""}" data-toggle-start-year="${index}" aria-pressed="${Boolean(edu.startYearHidden)}">${edu.startYearHidden?"Show in preview":"Hide in preview"}</button></div><input data-education="${index}" data-part="start" value="${escapeHTML(edu.start)}" placeholder="Year"></div>
           <div class="field"><label>End year</label><input data-education="${index}" data-part="end" value="${escapeHTML(edu.end)}" placeholder="Year"></div>
           <div class="field wide"><div class="title-label-row"><label>Description</label><button type="button" class="none-toggle ${edu.descriptionNone?"active":""}" data-description-none="${index}" aria-pressed="${edu.descriptionNone}">${edu.descriptionNone?"Add Description":"None"}</button></div><div class="description-tools" role="toolbar" aria-label="Description formatting"><button type="button" class="description-tool-button" data-format-kind="education" data-format-index="${index}" data-format-style="bullet" ${edu.descriptionNone?"disabled":""}>• Bullets</button><button type="button" class="description-tool-button" data-format-kind="education" data-format-index="${index}" data-format-style="numbered" ${edu.descriptionNone?"disabled":""}>1. Numbered</button><button type="button" class="description-tool-button" data-format-kind="education" data-format-index="${index}" data-format-style="dash" ${edu.descriptionNone?"disabled":""}>– Dashes</button><button type="button" class="description-tool-button" data-format-kind="education" data-format-index="${index}" data-format-style="clear" ${edu.descriptionNone?"disabled":""}>Clear</button></div><textarea data-education="${index}" data-part="description" rows="3" placeholder="Relevant coursework, honors, or achievements." ${edu.descriptionNone?"disabled":""}>${escapeHTML(edu.description)}</textarea></div></div>
         </section>`).join("")}</div><button type="button" class="btn btn-light add-entry" id="addEducation">+ Add education</button>`;
@@ -519,6 +519,10 @@
       const edu=state.education[Number(button.dataset.descriptionNone)];edu.descriptionNone=!edu.descriptionNone;
       if(edu.descriptionNone) edu.description="";
       renderPreview();renderForm();
+    }));
+    $("fields").querySelectorAll("[data-toggle-start-year]").forEach(button=>button.addEventListener("click",()=>{
+      const edu=state.education[Number(button.dataset.toggleStartYear)];edu.startYearHidden=!edu.startYearHidden;
+      renderForm();renderPreview();
     }));
     $("fields").querySelectorAll("[data-move-education]").forEach(button=>button.addEventListener("click",()=>{
       const index=Number(button.dataset.moveEducation);
@@ -771,7 +775,9 @@
       const degree=item.degreeNone?"":item.degree.trim()||(example?"Degree or Qualification":"");
       const school=item.school.trim()||(example?"School Name":"");
       const title=degree||school?`<p>${degree?`${escapeHTML(degree)}${school?" | ":""}`:""}${school?`<strong>${escapeHTML(school)}</strong>`:""}</p>`:"";
-      const years=[item.start.trim()||(example?"2016":""),item.end.trim()||(example?"2020":"")].filter(Boolean).join(" – ");
+      const startYear=item.startYearHidden?"":item.start.trim()||(example?"2016":"");
+      const endYear=item.end.trim()||(example?"2020":"");
+      const years=[startYear,endYear].filter(Boolean).join(" – ");
       const description=item.descriptionNone?"":item.description.trim()||(example&&!item.descriptionTouched?"Relevant coursework, honors, or achievements.":"");
       const content=title+(years?textLines(years):"")+(description?descriptionMarkup(description):"");
       return content?`<div class="item">${content}</div>`:"";
